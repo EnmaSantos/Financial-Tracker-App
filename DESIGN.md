@@ -1,85 +1,109 @@
-# Design System: The Emerald Ledger
-
-This design system is a bespoke framework crafted for a premium, mobile-first financial experience. It moves away from the sterile, "template-ready" look of traditional banking apps, opting instead for a high-end editorial aesthetic. By leveraging high-contrast typography and tonal layering, we create an environment that feels both authoritative and technologically advanced.
-
-## 1. Creative North Star: "The Digital Private Bank"
-The visual identity is built on the concept of a **"Digital Private Bank."** It evokes the feeling of a bespoke leather-bound ledger reimagined for the OLED era. 
-
-To break the "standard PWA" feel, we employ:
-*   **Intentional Asymmetry:** Avoid centering everything. Align large headlines to the left while tucking secondary data points into the right margin to create a sophisticated, unbalanced balance.
-*   **Tonal Depth:** Instead of using lines to separate bank accounts or transactions, we use the "physics of light"—layering different shades of dark blue and green to create natural boundaries.
-*   **The Emerald Pulse:** The accent color is not just a button color; it is a signal of health and vitality against the deep void of the background.
-
-## 2. Color & Surface Architecture
-We do not use borders. We use depth.
-
+# Design System Specification: The Digital Curator
+ 
+## 1. Overview & Creative North Star
+The North Star of this design system is **"The Digital Curator."** We are moving away from the "utility-first" appearance of standard fintech apps and toward a high-end, editorial experience. This system treats financial data as a collection of precious assets, presented with the authority of a premium gallery and the precision of a Swiss vault.
+ 
+To achieve this, we reject the rigid, boxed-in layouts of traditional UI. We embrace:
+*   **Intentional Asymmetry:** Strategic use of whitespace and off-center alignments to guide the eye.
+*   **Tonal Depth:** Replacing physical borders with light and shadow.
+*   **Editorial Scale:** Bold, high-contrast typography that makes a statement.
+ 
+---
+ 
+## 2. Colors & Surface Architecture
+ 
+### The Palette
+The core environment is **OLED-first (#080d1a)**. This deep black provides the canvas for our "Emerald" accents and high-contrast editorial type.
+ 
+*   **Primary (The Jewel):** `#4cdf9d` (Text/Iconography)
+*   **Secondary (The Glow):** `#6cffbf`
+*   **Surface:** `#0e1320` (The base foundation)
+*   **Error:** `#ffb4ab` (With a signature soft glow using `#ff6b6b`)
+ 
 ### The "No-Line" Rule
-Explicitly prohibited: 1px solid borders for sectioning content. Boundaries must be defined solely through background color shifts or subtle tonal transitions. If two elements touch, their differentiation comes from their `surface-container` level, not a stroke.
-
+Standard 1px borders are strictly prohibited for sectioning. We define boundaries through **Tonal Transitions**. A section is never "boxed"; it is simply a different depth of dark blue-grey. If you feel the need for a line, use a background color shift instead.
+ 
 ### Surface Hierarchy & Nesting
-Treat the UI as a series of physical layers. Use the following hierarchy to "lift" content toward the user:
-*   **Base Layer (`surface` / `#0e1320`):** The canvas.
-*   **Secondary Layer (`surface-container-low` / `#161b29`):** Large grouping areas (e.g., the background of a transaction list).
-*   **Action Layer (`surface-container-high` / `#252a38`):** Interactive cards or modals.
-*   **Floating Layer (`surface-container-highest` / `#303443`):** Critical pop-overs or floating action buttons.
-
+Depth is achieved by stacking Material 3-style containers. Use these to create "nested" importance:
+1.  **Background (`#0e1320`):** The canvas.
+2.  **Surface-Container-Low (`#161b29`):** Subtle sections.
+3.  **Surface-Container-Mid (`#1a1f2d`):** Secondary interactive zones.
+4.  **Surface-Container-High (`#252a38`):** Prominent cards.
+5.  **Surface-Container-Highest (`#303443`):** Active or hovered states.
+ 
 ### The "Glass & Gradient" Rule
-For high-priority items like "Total Balance" cards, use **Glassmorphism**. Apply `surface-variant` at 60% opacity with a `24px` backdrop-blur. This allows the deep emerald glows of the background to bleed through, softening the edges of the UI.
-
-### Signature Textures
-Main CTAs should never be flat. Use a subtle linear gradient:
-*   **Primary CTA:** From `primary-container` (#00e5a0) to `primary` (#6effc0) at a 135-degree angle. This adds a "jewel-toned" luster that feels expensive.
-
-## 3. Typography: Editorial Authority
-We utilize a high-contrast pairing to distinguish between "The Story" (Headings) and "The Data" (UI).
-
-*   **The Voice (Newsreader/Serif):** Used for `display` and `headline` scales. This provides an editorial, trustworthy feel. It should be used for large balance amounts and section headers.
-*   **The Engine (Manrope/Sans):** Used for `title`, `body`, and `label` scales. This is a technical, highly legible font designed for rapid scanning of transaction names and dates.
-
-**Typography Hierarchy Strategy:**
-*   **Display Large (3.5rem):** Reserved exclusively for the primary account balance.
-*   **Headline Medium (1.75rem):** Used for "Total Monthly Spend" or "Credit Health" section titles.
-*   **Label Small (0.6875rem):** All-caps with 0.05em letter spacing for "URGENT" or "PENDING" status flags.
-
+To add "soul" to the UI, use **Feature Glass** for floating elements (modals, navigation bars, or highlighted stats).
+*   **Opacity:** 60-70% of the surface color.
+*   **Blur:** 20px Backdrop-Blur.
+*   **Signature Glow:** Primary buttons must use a linear gradient (`#00b87a` → `#00e5a0`) to mimic the internal light of a cut emerald.
+ 
+---
+ 
+## 3. Typography
+We have moved away from "Inter" to embrace a more sophisticated, editorial pairing.
+ 
+*   **Headlines (DM Serif Display):** Used for "Editorial" moments—large balances, screen titles, and high-level summaries. It should feel authoritative and timeless.
+*   **UI & Body (DM Sans):** Used for all functional text. It is modern, highly legible, and geometric, providing a clean contrast to the serif headings.
+ 
+### Typography Scale
+*   **Display LG:** 3.5rem (DM Serif Display) - Use for hero balances.
+*   **Headline MD:** 1.75rem (DM Serif Display) - Use for section titles.
+*   **Title MD:** 1.125rem (DM Sans, Medium) - Use for card headings.
+*   **Body MD:** 0.875rem (DM Sans, Regular) - Standard reading text.
+*   **Label SM:** 0.6875rem (DM Sans, Bold, All Caps) - Used for metadata and overlines.
+ 
+---
+ 
 ## 4. Elevation & Depth
-In this design system, shadows are light, not dark.
-
-*   **The Layering Principle:** To create a "card," place a `surface-container-lowest` (#090e1b) element on a `surface-container-low` (#161b29) background. This creates a "recessed" look that feels integrated into the interface.
-*   **Ambient Shadows:** For floating elements, use a shadow color tinted with the primary emerald (`#00e5a0` at 8% opacity) with a blur of `32px`. This mimics the glow of an OLED screen rather than a physical shadow.
-*   **The Ghost Border:** If accessibility requires a stroke (e.g., in high-contrast mode), use `outline-variant` at **15% opacity**. It should be felt, not seen.
-
+ 
+### The Layering Principle
+Avoid "drop shadows" on standard cards. Instead, use the **Base-8 Spacing Scale** (4, 8, 16, 24, 32, 48, 64) to create separation. A `surface-container-low` card sitting on a `surface` background creates a natural, soft lift.
+ 
+### Ambient Shadows
+When an element must float (e.g., a bottom sheet or a detached menu), use **Ambient Shadows**:
+*   **Blur:** 40px – 60px.
+*   **Opacity:** 4% – 8%.
+*   **Color:** Use a tinted version of `on-surface` (a very faint blue-grey) rather than black.
+ 
+### The "Ghost Border" Fallback
+If WCAG AA accessibility requires a container boundary, use a **Ghost Border**:
+*   **Token:** `outline-variant` (#3c4a41).
+*   **Opacity:** 20% max.
+*   **Weight:** 1px.
+*   This ensures contrast without breaking the "No-Line" editorial aesthetic.
+ 
+---
+ 
 ## 5. Components
-
-### Cards & Lists (The Core)
-*   **Rule:** Never use dividers. Use `16px` of vertical white space to separate list items.
-*   **Context:** For bank transactions, use a `surface-container-low` background for the "Today" group and `surface-container-lowest` for the "Yesterday" group to create a visual temporal shift.
-
+ 
 ### Buttons
-*   **Primary:** Gradient of `primary-container` to `primary`. Roundedness: `xl` (0.75rem).
-*   **Secondary:** No background. `outline` color for text. When hovered/tapped, a `surface-container-high` subtle ghost fill appears.
-*   **Tertiary:** Text-only in `primary-fixed-dim`, used for "View All" or "Dismiss."
-
-### Financial Input Fields
-*   **Style:** Minimalist. No box. Only a `surface-container-highest` bottom bar (2px).
-*   **Focus State:** The bottom bar transitions to `primary` (#00e5a0) with a subtle outer glow.
-
-### Status Chips (Urgency Scale)
-*   **Safe (Green):** Text `on-primary-container`, background `primary-container` at 20% opacity.
-*   **Warning (Gold):** Text `on-secondary-container`, background `secondary-container` at 20% opacity.
-*   **Urgent (Red):** Text `on-tertiary-container`, background `tertiary-container` at 20% opacity.
-*   **Interaction:** Chips should use `full` roundedness (pill shape) to contrast against the `xl` roundedness of cards.
-
-### The "Credit Progress" Radial
-*   A custom component for credit scores. Use a thick `primary` stroke with a `primary-fixed-variant` track. The center should be transparent, revealing the `surface` color behind it.
-
+*   **Primary:** Emerald Gradient (`#00b87a` to `#00e5a0`). 0.75rem (xl) corner radius. White or `on-primary` text.
+*   **Secondary:** Ghost Border with `on-surface` text.
+*   **Tertiary:** Text-only, 0.75rem (xl) padding, DM Sans Bold.
+ 
+### Cards & Lists
+*   **Forbidden:** Divider lines. 
+*   **Required:** Use 16px or 24px of vertical whitespace to separate items. For lists, use a subtle background shift (`surface-container-low`) on every other item or upon hover.
+ 
+### Input Fields
+*   **Structure:** Minimalist. No bottom line or full box. Use a `surface-container-high` background with a `0.25rem` radius.
+*   **Focus State:** A 1px "Ghost Border" at 50% opacity in the primary emerald color.
+ 
+### States & Feedback
+*   **Empty States:** Use minimalist, thin-stroke illustrations. No heavy fills. Text should be `body-md` in `on-surface-variant`.
+*   **Loading States:** Shimmer skeletons using a gradient from `surface-container` to `surface-container-highest`. Movement should be slow and fluid (2s duration).
+*   **Error States:** Use `#ff6b6b`. Apply a 10px soft outer glow (drop shadow) to the error icon or text to make it feel urgent but integrated into the dark theme.
+ 
+---
+ 
 ## 6. Do’s and Don’ts
-
+ 
 ### Do:
-*   **Do** use extreme whitespace. If you think there is enough room between elements, add 8px more.
-*   **Do** use `Newsreader` for any text that is meant to be "read" (storytelling) and `Manrope` for anything that is "processed" (data).
-*   **Do** use "Emerald Glows"—small, blurred circles of `primary` color at 5% opacity tucked behind important cards to give the UI a signature atmosphere.
-
+*   **Do** use asymmetrical layouts. Let a heading hang further left than the body text below it to create an editorial feel.
+*   **Do** use "DM Serif Display" for numbers. They are the "hero" of a financial app.
+*   **Do** use `surface-bright` for hover states to create a "bloom" effect on cards.
+ 
 ### Don’t:
-*   **Don’t** use pure black (#000000). Use the `surface-container-lowest` (#090e1b) for OLED-friendly depth that still allows for subtle shadows.
-*   **Don’t** use 100% opacity borders. It breaks the "Private Bank" premium feel.
-*   **Don’t** use standard "Success Green" (#4CAF50). Only use the specified Emerald (`#00e5a0`) to maintain brand cohesion.
+*   **Don’t** use pure white (#FFFFFF) for body text. Use `on-surface` (#dee2f5) to reduce eye strain on dark backgrounds.
+*   **Don’t** use standard shadows. If it doesn't look like light passing through glass, it's too heavy.
+*   **Don’t** use "Inter" or "Roboto." This system relies on the specific character of DM Serif and DM Sans.
