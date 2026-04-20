@@ -1,57 +1,70 @@
-import { prisma } from "@ledger/db";
+import { getDashboard } from "@/lib/dashboard";
+import { Masthead } from "@/components/dashboard/Masthead";
+import { NetWorthHero } from "@/components/dashboard/NetWorthHero";
+import { FlowStrip } from "@/components/dashboard/FlowStrip";
+import { Allocation } from "@/components/dashboard/Allocation";
+import { AccountLists } from "@/components/dashboard/AccountLists";
+import { ProjectionPreview } from "@/components/dashboard/ProjectionPreview";
+import { RemindersPanel } from "@/components/dashboard/RemindersPanel";
+
+// TODO(Phase 5): resolve userId from session instead of the hardcoded persona.
+const CURRENT_USER_ID = "maya";
 
 export default async function Home() {
-  const user = await prisma.user.findUnique({
-    where: { id: "maya" },
-    include: {
-      accounts: true,
-    },
-  });
+  const d = await getDashboard(CURRENT_USER_ID);
 
-  if (!user) {
+  if (!d) {
     return (
-      <main className="p-8">
+      <div>
+        <div className="label-kicker mb-2">No ledger yet</div>
         <h1 className="display text-4xl mb-4">Equitas Financial</h1>
-        <p className="text-ink-2">User not found. Please run seed.</p>
-      </main>
+        <p className="text-ink-2">
+          User not found. Run <code className="font-mono">pnpm db:seed</code>.
+        </p>
+      </div>
     );
   }
 
-  const netWorth = user.accounts.reduce((acc, a) => acc + a.balance, 0);
+  const asOf = new Date().toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+  const startYear = new Date().getFullYear();
 
   return (
-    <main className="p-12 max-w-4xl">
-      <header className="mb-12">
-        <div className="label-kicker mb-2">Net Worth</div>
-        <h1 className="display hero-number mb-4">
-          ${netWorth.toLocaleString()}
-        </h1>
-        <p className="font-serif-text italic text-ink-2">
-          Welcome back, {user.name}.
-        </p>
-      </header>
+    <>
+      <Masthead
+        name={d.user.name}
+        asOf={asOf}
+        joinedYear={d.user.joinedYear}
+      />
 
-      <section>
-        <div className="label-kicker mb-6">Accounts</div>
-        <div className="space-y-4">
-          {user.accounts.map((account) => (
-            <div
-              key={account.id}
-              className="flex justify-between items-baseline border-b border-rule pb-2"
-            >
-              <div>
-                <div className="font-serif-text text-lg">{account.name}</div>
-                <div className="text-xs text-ink-3 uppercase tracking-wider">
-                  {account.institution}
-                </div>
-              </div>
-              <div className="num text-xl">
-                ${account.balance.toLocaleString()}
-              </div>
-            </div>
-          ))}
+      <div className="lead-grid mt-8">
+        <div>
+          <NetWorthHero
+            netWorth={d.netWorth}
+            monthlySaved={d.monthlySaved}
+            savingsRate={d.savingsRate}
+          />
+          <FlowStrip
+            monthlyIn={d.monthlyIn}
+            monthlyOut={d.monthlyOut}
+            monthlySaved={d.monthlySaved}
+          />
+          <Allocation cash={d.cash} invest={d.invest} debt={d.debt} />
         </div>
-      </section>
-    </main>
+        <ProjectionPreview
+          startingNetWorth={d.netWorth}
+          monthlyContribution={d.monthlySaved}
+          returnRate={d.user.returnRate}
+          startYear={startYear}
+        />
+      </div>
+
+      <AccountLists assets={d.assets} debts={d.debts} />
+
+      <RemindersPanel accounts={d.accounts} goals={d.goals} />
+    </>
   );
 }

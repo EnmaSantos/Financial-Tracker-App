@@ -1,15 +1,48 @@
-export default function DebtPage() {
+import { getDashboard } from "@/lib/dashboard";
+import type { DebtInput } from "@/lib/finance";
+import { PayoffPlanner } from "@/components/debt/PayoffPlanner";
+
+// TODO(Phase 5): resolve userId from session.
+const CURRENT_USER_ID = "maya";
+
+export default async function DebtPage() {
+  const d = await getDashboard(CURRENT_USER_ID);
+  if (!d) {
+    return (
+      <div>
+        <h1 className="display text-4xl mb-4">Debt</h1>
+        <p className="text-ink-2">
+          User not found. Run <code className="font-mono">pnpm db:seed</code>.
+        </p>
+      </div>
+    );
+  }
+
+  const debts: DebtInput[] = d.debts.map((acc) => ({
+    id: acc.id,
+    name: acc.name,
+    balance: acc.balance,
+    apr: acc.apr,
+    monthly: acc.monthly,
+  }));
+
   return (
-    <div>
-      <header className="mb-8">
-        <div className="label-kicker mb-2">Debt</div>
-        <h1 className="display" style={{ fontSize: 48 }}>
-          Paid off, on a timeline.
-        </h1>
+    <>
+      <header className="masthead-row">
+        <div>
+          <div className="label-kicker">Debt</div>
+          <h1
+            className="display mt-1"
+            style={{ fontSize: "clamp(40px, 5vw, 56px)" }}
+          >
+            Paid off, on a timeline.
+          </h1>
+        </div>
       </header>
-      <p className="text-ink-2">
-        Avalanche &amp; snowball views arrive in Phase 4.
-      </p>
-    </div>
+
+      <section className="mt-10">
+        <PayoffPlanner debts={debts} />
+      </section>
+    </>
   );
 }

@@ -15,5 +15,5 @@ if (process.env["NODE_ENV"] !== "production") {
   globalThis.__ledgerPrisma = prisma;
 }
 
-export type { Prisma } from "@prisma/client";
+export type { Prisma, Account, User, Goal, Milestone, Transaction } from "@prisma/client";
 export { PrismaClient } from "@prisma/client";

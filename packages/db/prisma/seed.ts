@@ -67,7 +67,7 @@ async function main() {
       { userId: maya.id, id: "m_401k", name: "401(k)",              institution: "Fidelity",          type: "investment", balance:  29_000, updated: "1 week ago",  apr: null,  monthly: null, color: "chart-3" },
       { userId: maya.id, id: "m_cc1",  name: "Chase Sapphire",      institution: "Chase",             type: "debt",       balance:  -8_400, updated: "today",       apr: 22.99, monthly: 250,  color: "accent"  },
       { userId: maya.id, id: "m_cc2",  name: "Amex Everyday",       institution: "Amex",              type: "debt",       balance:  -3_200, updated: "3 days ago",  apr: 19.49, monthly: 100,  color: "accent"  },
-      { userId: maya.id, id: "m_bb",   name: "Best Buy Store Card", institution: "Citi",              type: "debt",       balance:  -2_800, updated: "2 days ago",  apr: 29.99, monthly: 50,   color: "accent"  },
+      { userId: maya.id, id: "m_bb",   name: "Best Buy Store Card", institution: "Citi",              type: "debt",       balance:  -2_800, updated: "2 days ago",  apr: 29.99, monthly: 50,   color: "accent", promoEndsAt: new Date("2026-06-12") },
       { userId: maya.id, id: "m_stu",  name: "Student Loan",        institution: "Nelnet",            type: "debt",       balance: -28_400, updated: "1 week ago",  apr: 5.8,   monthly: 320,  color: "accent"  },
       { userId: maya.id, id: "m_car",  name: "Car Loan",            institution: "Toyota",            type: "debt",       balance: -10_000, updated: "3 days ago",  apr: 6.2,   monthly: 400,  color: "accent"  },
     ],
