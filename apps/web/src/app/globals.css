@@ -90,6 +90,15 @@
   --chart-ghost: oklch(32% 0.02 80);
 }
 
+/* ---------------- Accent variants ---------------- */
+[data-accent="indigo"] { --accent: oklch(45% 0.15 265); --accent-soft: oklch(92% 0.05 265); --accent-ink: oklch(30% 0.12 265); --chart-1: oklch(45% 0.15 265); }
+[data-accent="forest"] { --accent: oklch(40% 0.1 155);  --accent-soft: oklch(92% 0.04 155); --accent-ink: oklch(28% 0.08 155); --chart-1: oklch(40% 0.1 155); }
+[data-accent="ochre"]  { --accent: oklch(55% 0.12 75);  --accent-soft: oklch(93% 0.05 75);  --accent-ink: oklch(38% 0.1 75);  --chart-1: oklch(55% 0.12 75); }
+
+[data-theme="dark"][data-accent="indigo"] { --accent: oklch(72% 0.16 265); --accent-soft: oklch(26% 0.08 265); --accent-ink: oklch(82% 0.14 265); --chart-1: oklch(72% 0.16 265); }
+[data-theme="dark"][data-accent="forest"] { --accent: oklch(70% 0.12 155); --accent-soft: oklch(26% 0.06 155); --accent-ink: oklch(80% 0.1 155);  --chart-1: oklch(70% 0.12 155); }
+[data-theme="dark"][data-accent="ochre"]  { --accent: oklch(75% 0.14 75);  --accent-soft: oklch(28% 0.07 75);  --accent-ink: oklch(85% 0.12 75);  --chart-1: oklch(75% 0.14 75); }
+
 /* ---------------- Base ---------------- */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
@@ -133,4 +142,20 @@ input, textarea, select { font: inherit; color: inherit; }
 .lead-grid  { display: grid; grid-template-columns: 1fr 1.4fr; gap: 32px; margin-bottom: 40px; }
 .cols-3     { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 28px; margin-bottom: 40px; }
 .cols-4     { display: grid; grid-template-columns: repeat(4, 1fr); }
+.masthead-row { display: flex; justify-content: space-between; align-items: baseline; gap: 24px; padding-bottom: 16px; border-bottom: 2px solid var(--color-ink); flex-wrap: wrap; }
+.stats-row    { margin-top: 20px; display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+
+@media (max-width: 1100px) {
+  .lead-grid { grid-template-columns: 1fr; gap: 28px; }
+  .cols-3    { grid-template-columns: 1fr 1fr; }
+  .cols-4    { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 720px) {
+  .cols-3    { grid-template-columns: 1fr; }
+  .stats-row { gap: 14px; }
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--color-rule); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-ink-3); }
 

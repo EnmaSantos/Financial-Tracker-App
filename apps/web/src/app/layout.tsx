@@ -6,6 +6,9 @@ import {
   JetBrains_Mono,
 } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/components/shell/ThemeProvider";
+import { Sidebar } from "@/components/shell/Sidebar";
+import { ThemeSwitcher } from "@/components/shell/ThemeSwitcher";
 
 const instrumentSerif = Instrument_Serif({
   variable: "--font-instrument-serif",
@@ -43,8 +46,22 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${instrumentSerif.variable} ${newsreader.variable} ${interTight.variable} ${jetBrainsMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full">
+        <ThemeProvider>
+          <div className="flex min-h-screen">
+            <Sidebar />
+            <main
+              className="flex-1"
+              style={{ padding: "40px 48px 80px", maxWidth: 1280 }}
+            >
+              {children}
+            </main>
+          </div>
+          <ThemeSwitcher />
+        </ThemeProvider>
+      </body>
     </html>
   );
 }
