@@ -1,0 +1,1478 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1280" />
+<title>Equitas Financial — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Source+Serif+4:ital,wght@0,400;0,500;0,600;1,400&display=swap" />
+<style>
+/* ---------- tokens ---------- */
+:root{
+  --bone:#F4EFE6; --paper:#FAF6EE;
+  --taupe-100:#E8E0D2; --taupe-300:#C9BDA8;
+  --espresso:#2A1F17; --espresso-soft:#5A4A3C;
+  --oxblood:#7A2E2E; --green:#3F6B4A; --red:#A94442; --amber:#B8863A;
+  --shadow:none;
+  --inner:0 0 0 0 transparent;
+}
+html[data-theme="dark"]{
+  --bone:#1A1612; --paper:#221C16;
+  --taupe-100:#2E2721; --taupe-300:#4A3F35;
+  --espresso:#F0E8DB; --espresso-soft:#B5A892;
+  --oxblood:#C76B6B; --green:#7AAE86; --red:#D78280; --amber:#D9A865;
+  --inner:inset 0 0 0 1px rgba(240,232,219,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bone);color:var(--espresso);transition:background-color .24s ease-out,color .24s ease-out}
+body{font-family:'Inter',system-ui,sans-serif;font-size:15px;line-height:1.4;letter-spacing:-0.005em;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+.mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+.serif{font-family:'Source Serif 4',Georgia,serif}
+.eyebrow{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--espresso-soft)}
+.num{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+.pos{color:var(--green)} .neg{color:var(--red)} .warn{color:var(--amber)} .accent{color:var(--oxblood)}
+.divider{height:1px;background:var(--taupe-100);border:0;margin:0}
+.hidden{display:none!important}
+
+/* ---------- top bar ---------- */
+.topbar{
+  position:sticky;top:0;z-index:10;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 28px;background:var(--bone);
+  border-bottom:1px solid var(--taupe-100);
+}
+.wordmark{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:16px;letter-spacing:.04em}
+.wordmark .dot{color:var(--oxblood)}
+.topbar-right{display:flex;align-items:center;gap:14px}
+.persona-select{
+  font-family:'Inter',sans-serif;font-size:13px;font-weight:500;
+  background:var(--paper);color:var(--espresso);
+  border:1px solid var(--taupe-300);border-radius:6px;
+  padding:7px 10px;cursor:pointer;appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--espresso-soft) 50%),linear-gradient(135deg,var(--espresso-soft) 50%,transparent 50%);
+  background-position:calc(100% - 14px) 50%,calc(100% - 10px) 50%;
+  background-size:4px 4px;background-repeat:no-repeat;padding-right:28px;
+}
+.icon-btn{
+  width:34px;height:34px;border-radius:6px;
+  display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid var(--taupe-300);background:var(--paper);color:var(--espresso);
+  transition:background-color .18s ease-out,border-color .18s ease-out;
+}
+.icon-btn:hover{border-color:var(--espresso-soft)}
+.icon-btn.active{background:var(--espresso);color:var(--paper);border-color:var(--espresso)}
+
+/* ---------- canvas ---------- */
+.canvas{
+  display:grid;grid-template-columns:minmax(420px,460px) 1fr;
+  gap:48px;padding:40px 48px;max-width:1400px;margin:0 auto;
+  align-items:start;
+}
+.canvas-right h2{
+  font-family:'Source Serif 4',serif;font-weight:500;font-size:20px;margin:0 0 4px
+}
+.canvas-right p.lede{color:var(--espresso-soft);margin:0 0 24px;max-width:56ch}
+.alt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:40px}
+.alt-card{
+  background:var(--paper);border:1px solid var(--taupe-100);
+  border-radius:8px;padding:16px;cursor:pointer;
+  transition:border-color .18s ease-out,transform .18s ease-out;
+  box-shadow:var(--shadow);
+}
+.alt-card:hover{border-color:var(--taupe-300)}
+.alt-card.active{border-color:var(--oxblood);box-shadow:0 0 0 1px var(--oxblood)}
+.alt-thumb{height:220px;border-radius:6px;background:var(--bone);border:1px solid var(--taupe-100);padding:14px;overflow:hidden;margin-bottom:12px}
+.alt-card h3{font-family:'Source Serif 4',serif;font-weight:500;font-size:15px;margin:0 0 2px}
+.alt-card p{font-size:12px;color:var(--espresso-soft);margin:0}
+.notes{
+  border-top:1px solid var(--taupe-100);padding-top:24px;
+  display:grid;grid-template-columns:1fr 1fr;gap:24px;color:var(--espresso-soft);font-size:13px;
+}
+.notes h4{font-family:'Source Serif 4',serif;color:var(--espresso);margin:0 0 8px;font-size:14px;font-weight:600}
+.notes ul{margin:0;padding-left:18px}
+.notes li{margin-bottom:4px}
+
+/* ---------- phone frame ---------- */
+.phone-wrap{position:sticky;top:96px;display:flex;justify-content:center}
+.phone{
+  width:400px;height:844px;
+  background:#0C0A08;border-radius:52px;padding:12px;
+  box-shadow:0 30px 80px -30px rgba(42,31,23,.45),0 8px 20px -10px rgba(42,31,23,.25);
+  position:relative;
+}
+html[data-theme="dark"] .phone{box-shadow:0 30px 80px -30px rgba(0,0,0,.6),0 8px 20px -10px rgba(0,0,0,.4)}
+.phone::before{
+  content:"";position:absolute;top:26px;left:50%;transform:translateX(-50%);
+  width:110px;height:32px;background:#0C0A08;border-radius:20px;z-index:4;pointer-events:none;
+}
+.screen{
+  width:100%;height:100%;background:var(--bone);border-radius:40px;overflow:hidden;
+  display:flex;flex-direction:column;position:relative;
+}
+.statusbar{
+  height:44px;padding:0 28px;display:flex;align-items:flex-end;justify-content:space-between;
+  padding-bottom:6px;flex-shrink:0;
+}
+.statusbar .time{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500}
+.statusbar .sysicons{display:flex;gap:5px;align-items:center;color:var(--espresso)}
+.appbody{flex:1;overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth}
+.appbody::-webkit-scrollbar{width:0}
+.tabbar{
+  flex-shrink:0;border-top:1px solid var(--taupe-100);
+  background:var(--bone);
+  display:grid;grid-template-columns:repeat(5,1fr);
+  padding:6px 6px 18px;
+}
+.tab{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:8px 4px;color:var(--espresso-soft);font-size:10px;font-weight:500;
+  letter-spacing:.02em;border-radius:8px;transition:color .18s ease-out;
+}
+.tab.active{color:var(--espresso)}
+.tab.active svg{color:var(--oxblood)}
+.tab svg{width:20px;height:20px}
+
+/* ---------- page ---------- */
+.page{display:none;animation:fadeup .24s ease-out}
+.page.active{display:block}
+@keyframes fadeup{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.page-head{padding:8px 24px 16px;display:flex;align-items:center;justify-content:space-between}
+.page-head h1{font-family:'Source Serif 4',serif;font-size:28px;font-weight:600;margin:0;letter-spacing:-0.01em}
+.page-head .eyebrow{display:block;margin-bottom:6px}
+.page-back{display:flex;align-items:center;gap:6px;color:var(--espresso-soft);font-size:13px}
+
+/* ---------- dashboard ---------- */
+.hero{padding:4px 24px 24px}
+.hero .eyebrow{margin-bottom:8px}
+.hero .networth{font-family:'JetBrains Mono',monospace;font-weight:500;font-size:48px;letter-spacing:-0.02em;line-height:1.05}
+.hero .delta{margin-top:8px;font-size:13px;color:var(--espresso-soft)}
+.hero .delta .num{color:var(--green);font-weight:500}
+.spark{margin-top:18px;height:52px;width:100%;display:block}
+.stat-strip{display:grid;grid-template-columns:repeat(3,1fr);padding:18px 24px;gap:12px;border-top:1px solid var(--taupe-100);border-bottom:1px solid var(--taupe-100)}
+.stat .eyebrow{margin-bottom:4px}
+.stat .val{font-family:'JetBrains Mono',monospace;font-weight:500;font-size:18px}
+.stat .trend{font-size:11px;color:var(--espresso-soft);margin-top:2px}
+.section{padding:24px}
+.section + .section{padding-top:0}
+.section-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+.section-head h2{font-family:'Source Serif 4',serif;font-weight:500;font-size:18px;margin:0}
+.section-head a{font-size:12px;color:var(--espresso-soft);text-decoration:none}
+.row{
+  display:grid;grid-template-columns:1fr auto;align-items:center;
+  padding:12px 0;gap:10px;
+  border-bottom:1px solid var(--taupe-100);
+}
+.row:last-child{border-bottom:0}
+.row .label{display:flex;flex-direction:column;gap:2px;min-width:0}
+.row .label .name{font-size:14px;font-weight:500;color:var(--espresso)}
+.row .label .sub{font-size:11px;color:var(--espresso-soft);letter-spacing:.02em}
+.row .value{font-family:'JetBrains Mono',monospace;font-weight:500;font-size:15px;text-align:right}
+.row .value .pct{display:block;font-size:11px;color:var(--espresso-soft);font-weight:400;margin-top:2px}
+.row.pressable{cursor:pointer;transition:background-color .14s ease-out}
+.row.pressable:active{background:var(--taupe-100)}
+.dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:middle}
+.dot.amber{background:var(--amber)}
+.dot.red{background:var(--red)}
+.dot.green{background:var(--green)}
+
+.promo-alert{
+  margin:8px 24px 0;padding:14px;border:1px solid var(--amber);border-radius:8px;
+  background:color-mix(in srgb, var(--amber) 8%, var(--bone));
+  display:flex;gap:12px;align-items:flex-start;cursor:pointer;
+}
+.promo-alert svg{color:var(--amber);flex-shrink:0;margin-top:2px}
+.promo-alert .ttl{font-family:'Source Serif 4',serif;font-size:15px;font-weight:500;margin-bottom:2px}
+.promo-alert .body{font-size:12px;color:var(--espresso-soft);line-height:1.45}
+.promo-alert .cta{font-size:12px;color:var(--oxblood);font-weight:500;margin-top:6px;display:inline-block}
+
+/* ---------- accounts ---------- */
+.acct-group{padding:0 24px 16px}
+.acct-group .eyebrow{padding:8px 0}
+.acct-row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--taupe-100);cursor:pointer}
+.acct-row:last-child{border-bottom:0}
+.acct-row .name{font-weight:500;font-size:14px}
+.acct-row .sub{font-size:11px;color:var(--espresso-soft);margin-top:2px}
+.acct-row .balance{font-family:'JetBrains Mono',monospace;font-weight:500;font-size:16px;text-align:right}
+
+.edit-sheet{
+  position:absolute;left:0;right:0;bottom:0;top:0;
+  background:rgba(42,31,23,.35);
+  display:flex;align-items:flex-end;
+  opacity:0;pointer-events:none;transition:opacity .24s ease-out;
+  z-index:6;
+}
+.edit-sheet.show{opacity:1;pointer-events:auto}
+.edit-sheet-inner{
+  width:100%;background:var(--paper);border-top-left-radius:20px;border-top-right-radius:20px;
+  padding:24px 24px 32px;
+  transform:translateY(100%);transition:transform .24s ease-out;
+}
+.edit-sheet.show .edit-sheet-inner{transform:none}
+.edit-sheet h3{font-family:'Source Serif 4',serif;font-weight:500;font-size:20px;margin:0 0 4px}
+.edit-sheet .eyebrow{margin-bottom:16px}
+.edit-value{font-family:'JetBrains Mono',monospace;font-weight:500;font-size:40px;text-align:center;padding:18px 0;border-bottom:1px solid var(--taupe-100);margin-bottom:18px}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.keypad button{
+  height:48px;background:var(--bone);border:1px solid var(--taupe-100);border-radius:8px;
+  font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:500;
+  transition:background-color .14s ease-out;
+}
+.keypad button:active{background:var(--taupe-100)}
+.keypad button.save{background:var(--espresso);color:var(--paper);border-color:var(--espresso);grid-column:span 3;height:44px;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;margin-top:6px}
+
+/* ---------- debt ---------- */
+.debt-summary{padding:8px 24px 24px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;border-bottom:1px solid var(--taupe-100)}
+.debt-summary .cell .eyebrow{margin-bottom:4px}
+.debt-summary .cell .val{font-family:'JetBrains Mono',monospace;font-weight:500;font-size:17px}
+.debt-summary .cell .sub{font-size:11px;color:var(--espresso-soft);margin-top:2px}
+.strategy{display:grid;grid-template-columns:repeat(3,1fr);margin:20px 24px;background:var(--paper);border:1px solid var(--taupe-100);border-radius:8px;padding:3px;gap:2px}
+.strategy button{padding:9px 0;font-size:13px;font-weight:500;border-radius:6px;color:var(--espresso-soft);transition:background-color .18s ease-out,color .18s ease-out}
+.strategy button.active{background:var(--espresso);color:var(--paper)}
+.slider-block{padding:20px 24px;border-top:1px solid var(--taupe-100)}
+.slider-block label{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.slider-block label .txt{font-family:'Source Serif 4',serif;font-size:15px;font-weight:500}
+.slider-block label .amt{font-family:'JetBrains Mono',monospace;font-size:16px;color:var(--oxblood);font-weight:500}
+input[type=range]{
+  width:100%;appearance:none;height:3px;background:var(--taupe-100);border-radius:2px;outline:none;
+}
+input[type=range]::-webkit-slider-thumb{
+  appearance:none;width:20px;height:20px;border-radius:50%;background:var(--oxblood);cursor:pointer;border:3px solid var(--paper);
+  box-shadow:0 0 0 1px var(--oxblood);
+}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--oxblood);cursor:pointer;border:3px solid var(--paper)}
+.coach{font-family:'Source Serif 4',serif;font-style:italic;font-size:14px;line-height:1.5;padding:16px 24px;color:var(--espresso);border-top:1px solid var(--taupe-100);background:var(--paper)}
+.coach strong{font-style:normal;color:var(--oxblood);font-weight:500}
+.debt-row{display:grid;grid-template-columns:1fr auto;gap:10px;padding:14px 24px;border-bottom:1px solid var(--taupe-100);transition:background-color .24s ease-out}
+.debt-row .name{font-weight:500;font-size:14px}
+.debt-row .meta{font-size:11px;color:var(--espresso-soft);margin-top:3px;font-family:'JetBrains Mono',monospace;letter-spacing:.02em}
+.debt-row .bal{font-family:'JetBrains Mono',monospace;font-weight:500;font-size:15px;text-align:right}
+.debt-row .months{font-size:11px;color:var(--espresso-soft);text-align:right;margin-top:3px;font-family:'JetBrains Mono',monospace}
+.debt-row.promo{background:color-mix(in srgb, var(--amber) 6%, transparent)}
+.debt-row.promo .name::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--amber);margin-right:6px;vertical-align:middle}
+
+/* ---------- goals ---------- */
+.goal{padding:18px 24px;border-bottom:1px solid var(--taupe-100)}
+.goal .ttl{font-family:'Source Serif 4',serif;font-size:17px;font-weight:500;margin-bottom:4px}
+.goal .sub{font-size:12px;color:var(--espresso-soft);margin-bottom:10px}
+.bar{height:6px;background:var(--taupe-100);border-radius:3px;overflow:hidden;margin:10px 0 8px}
+.bar-fill{height:100%;background:var(--oxblood);border-radius:3px;transition:width .4s ease-out}
+.goal .foot{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--espresso-soft)}
+.goal .foot .cur{color:var(--espresso);font-weight:500}
+
+/* ---------- transactions ---------- */
+.month-pick{display:flex;gap:8px;padding:8px 24px 16px;overflow-x:auto}
+.month-pick button{flex-shrink:0;padding:6px 12px;border-radius:14px;font-size:12px;border:1px solid var(--taupe-100);color:var(--espresso-soft);background:var(--paper)}
+.month-pick button.active{background:var(--espresso);color:var(--paper);border-color:var(--espresso)}
+.cat-bar{padding:12px 24px;display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:baseline;border-bottom:1px solid var(--taupe-100)}
+.cat-bar .cat{font-size:13px;font-weight:500}
+.cat-bar .amt{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500}
+.cat-track{grid-column:1 / -1;height:4px;background:var(--taupe-100);border-radius:2px;overflow:hidden}
+.cat-track div{height:100%;background:var(--espresso);border-radius:2px;transition:width .4s ease-out}
+.callout{padding:14px 24px;border-bottom:1px solid var(--taupe-100);font-family:'Source Serif 4',serif;font-size:14px;line-height:1.45}
+.callout .hint{font-family:'Inter',sans-serif;font-size:11px;color:var(--espresso-soft);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;font-weight:500}
+.callout .delta-up{color:var(--red)} .callout .delta-dn{color:var(--green)}
+.txn{padding:12px 24px;display:grid;grid-template-columns:1fr auto;gap:10px;border-bottom:1px solid var(--taupe-100)}
+.txn .d{font-size:11px;color:var(--espresso-soft);font-family:'JetBrains Mono',monospace}
+.txn .n{font-size:13px;font-weight:500;margin-top:1px}
+.txn .a{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:500;text-align:right}
+
+/* ---------- forecast ---------- */
+.forecast-hero{padding:8px 24px 20px}
+.forecast-hero .proj{font-family:'JetBrains Mono',monospace;font-size:30px;font-weight:500}
+.forecast-hero .sub{font-size:12px;color:var(--espresso-soft);margin-top:4px}
+.forecast-svg{width:100%;height:200px;display:block;padding:0 16px}
+.chips{display:flex;gap:8px;padding:16px 24px;overflow-x:auto;border-top:1px solid var(--taupe-100)}
+.chip{flex-shrink:0;padding:7px 12px;border:1px solid var(--taupe-300);border-radius:16px;font-size:12px;font-weight:500;color:var(--espresso);background:var(--paper);cursor:pointer;transition:all .18s ease-out}
+.chip.active{background:var(--oxblood);color:#FAF6EE;border-color:var(--oxblood)}
+.milestone-note{padding:14px 24px;font-family:'Source Serif 4',serif;font-size:14px;color:var(--espresso-soft);border-top:1px solid var(--taupe-100);font-style:italic}
+
+/* ---------- reminders ---------- */
+.week-head{padding:16px 24px 6px;font-family:'Source Serif 4',serif;font-size:13px;font-weight:500;color:var(--espresso-soft);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--taupe-100)}
+.rem{padding:14px 24px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;border-bottom:1px solid var(--taupe-100)}
+.rem .date{width:42px;text-align:center;font-family:'JetBrains Mono',monospace}
+.rem .date .d{font-size:18px;font-weight:500;line-height:1}
+.rem .date .m{font-size:10px;color:var(--espresso-soft);margin-top:2px;text-transform:uppercase;letter-spacing:.08em}
+.rem .body{min-width:0}
+.rem .body .n{font-size:14px;font-weight:500}
+.rem .body .s{font-size:11px;color:var(--espresso-soft);margin-top:2px}
+.rem .amt{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:500}
+.rem.warn-event{background:color-mix(in srgb, var(--amber) 7%, transparent)}
+.rem.warn-event .date .d{color:var(--amber)}
+
+/* ---------- add account flow ---------- */
+.type-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:12px 24px 24px}
+.type-tile{padding:18px 16px;border:1px solid var(--taupe-100);border-radius:8px;background:var(--paper);text-align:left;transition:border-color .18s ease-out}
+.type-tile:hover{border-color:var(--taupe-300)}
+.type-tile .ic{width:24px;height:24px;color:var(--oxblood);margin-bottom:10px}
+.type-tile .n{font-family:'Source Serif 4',serif;font-size:15px;font-weight:500;margin-bottom:2px}
+.type-tile .s{font-size:11px;color:var(--espresso-soft)}
+
+/* ---------- privacy ---------- */
+html[data-privacy="true"] .masked,
+html[data-privacy="true"] .networth,
+html[data-privacy="true"] .stat .val,
+html[data-privacy="true"] .row .value,
+html[data-privacy="true"] .acct-row .balance,
+html[data-privacy="true"] .debt-row .bal,
+html[data-privacy="true"] .goal .foot .cur,
+html[data-privacy="true"] .debt-summary .cell .val,
+html[data-privacy="true"] .forecast-hero .proj,
+html[data-privacy="true"] .cat-bar .amt,
+html[data-privacy="true"] .txn .a,
+html[data-privacy="true"] .rem .amt{
+  filter:blur(6px);user-select:none;
+}
+
+/* alt-layout mini-mocks */
+.mini-dash{font-family:'Inter',sans-serif;color:var(--espresso);height:100%;display:flex;flex-direction:column;gap:6px}
+.mini-dash .eb{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--espresso-soft);font-weight:500}
+.mini-dash .big{font-family:'JetBrains Mono',monospace;font-weight:500}
+.mini-dash hr{border:0;height:1px;background:var(--taupe-100);margin:2px 0}
+.mini-dash .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;font-size:8px}
+.mini-dash .ln{display:flex;justify-content:space-between;font-size:9px;padding:2px 0}
+.mini-editorial .big{font-size:22px}
+.mini-editorial .num01{font-family:'Source Serif 4',serif;font-style:italic;font-size:10px;color:var(--oxblood)}
+.mini-editorial h4{font-family:'Source Serif 4',serif;font-size:11px;font-weight:500;margin:2px 0}
+.mini-terminal{font-family:'JetBrains Mono',monospace;font-size:8.5px;line-height:1.4}
+.mini-terminal .big{font-size:16px}
+.mini-terminal .tbl{display:grid;grid-template-columns:1fr auto;gap:1px 8px}
+.mini-serif .big{font-family:'Source Serif 4',serif;font-weight:500;font-size:20px}
+.mini-serif .quote{font-family:'Source Serif 4',serif;font-style:italic;font-size:10px;color:var(--espresso-soft);line-height:1.4}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wordmark">EQUITAS<span class="dot">.</span></div>
+  <div class="topbar-right">
+    <select id="persona-select" class="persona-select" aria-label="Persona">
+      <option value="maya">Maya — mid-debt payoff</option>
+      <option value="david">David — building wealth</option>
+      <option value="linda">Linda — near retirement</option>
+    </select>
+    <button class="icon-btn" id="theme-btn" aria-label="Toggle theme" title="Toggle light / dark">
+      <svg id="theme-ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+    </button>
+    <button class="icon-btn" id="privacy-btn" aria-label="Privacy mode" title="Show / hide balances">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="canvas">
+  <div class="phone-wrap">
+    <div class="phone">
+      <div class="screen">
+        <div class="statusbar">
+          <span class="time">9:41</span>
+          <span class="sysicons">
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="currentColor"><rect x="0" y="6" width="2" height="4"/><rect x="4" y="4" width="2" height="6"/><rect x="8" y="2" width="2" height="8"/><rect x="12" y="0" width="2" height="10"/></svg>
+            <svg width="16" height="10" viewBox="0 0 16 10" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M1 5a7 7 0 0 1 14 0"/><path d="M3 7a5 5 0 0 1 10 0"/><circle cx="8" cy="9" r="1" fill="currentColor"/></svg>
+            <svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1"><rect x="0.5" y="0.5" width="18" height="9" rx="2"/><rect x="2" y="2" width="14" height="6" rx="1" fill="currentColor"/><rect x="19.5" y="3.5" width="1.5" height="3" fill="currentColor"/></svg>
+          </span>
+        </div>
+        <div class="appbody" id="appbody">
+          <!-- pages injected -->
+        </div>
+        <div class="tabbar" id="tabbar"></div>
+        <div class="edit-sheet" id="edit-sheet">
+          <div class="edit-sheet-inner">
+            <div class="eyebrow" id="edit-eyebrow">EDIT BALANCE</div>
+            <h3 id="edit-name">Account</h3>
+            <div class="edit-value mono" id="edit-val">$0</div>
+            <div class="keypad" id="keypad"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="canvas-right">
+    <h2>Equitas Financial — interactive prototype</h2>
+    <p class="lede">Warm editorial / quant hybrid. A money-management app for people who want speed, clarity, and manual control — not broken bank integrations. Tap around the phone. Swap dashboard variants, personas, and theme.</p>
+
+    <div class="alt-grid" id="alt-grid">
+      <div class="alt-card active" data-variant="editorial">
+        <div class="alt-thumb"><div class="mini-dash mini-editorial" id="mini-a"></div></div>
+        <h3>Alt A — Editorial</h3>
+        <p>Serif headlines, magazine-numbered sections.</p>
+      </div>
+      <div class="alt-card" data-variant="terminal">
+        <div class="alt-thumb"><div class="mini-dash mini-terminal" id="mini-b"></div></div>
+        <h3>Alt B — Terminal dense</h3>
+        <p>Monospace-forward, more data, divider-heavy.</p>
+      </div>
+      <div class="alt-card" data-variant="serif">
+        <div class="alt-thumb"><div class="mini-dash mini-serif" id="mini-c"></div></div>
+        <h3>Alt C — Serif-forward calm</h3>
+        <p>Fewer numbers on first screen, coaching prominent.</p>
+      </div>
+    </div>
+
+    <div class="notes">
+      <div>
+        <h4>Controls</h4>
+        <ul>
+          <li>Bottom tabs — Home, Accounts, Debt, Goals, More</li>
+          <li>Persona dropdown re-skins all data</li>
+          <li>Sun / moon — theme · Eye — privacy mode</li>
+          <li>Click an alternate to swap the dashboard</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Try this</h4>
+        <ul>
+          <li>Tap an account → inline balance edit</li>
+          <li>Drag the extra-payment slider on Debt</li>
+          <li>Toggle avalanche / snowball</li>
+          <li>Toggle scenario chips on Forecast</li>
+          <li>Tap the Best Buy amber alert on Home</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   STATE
+========================================================= */
+const fmt = (n, d=0) => {
+  const sign = n < 0 ? '-' : '';
+  const abs = Math.abs(n);
+  return sign + '$' + abs.toLocaleString('en-US', {minimumFractionDigits:d, maximumFractionDigits:d});
+};
+const fmtShort = n => {
+  const a = Math.abs(n);
+  if (a >= 1e6) return '$' + (n/1e6).toFixed(1) + 'M';
+  if (a >= 1e3) return '$' + (n/1e3).toFixed(1) + 'k';
+  return fmt(n);
+};
+
+const PERSONAS = {
+  maya: {
+    name:'Maya Chen', age:32, city:'Portland, OR',
+    income: 7850, spend: 5340, saved: 2510,
+    trend6: [15200, 15780, 16240, 16900, 17160, 18400],
+    delta: 1240,
+    accounts: {
+      cash: [
+        {id:'chk', name:'Checking', inst:'Ally', bal:4200, updated:'2 days ago'},
+        {id:'sav', name:'Savings — Emergency Fund', inst:'Marcus', bal:6800, updated:'2 days ago'}
+      ],
+      credit: [
+        {id:'chase', name:'Chase Sapphire', inst:'Chase', bal:-8400, apr:22.99, min:210, due:'Apr 28', updated:'today'},
+        {id:'amex',  name:'Amex Everyday',  inst:'American Express', bal:-3200, apr:19.49, min:85,  due:'May 3',  updated:'today'},
+        {id:'bby',   name:'Best Buy Store Card', inst:'Citi', bal:-2800, apr:0, min:120, due:'Apr 30', promo:'Mar 12, 2026', promoDays:47, updated:'today'}
+      ],
+      loans: [
+        {id:'nelnet', name:'Student Loan', inst:'Nelnet', bal:-28400, apr:5.8, min:312, due:'May 15', updated:'1 wk ago'},
+        {id:'car',    name:'Car Loan',     inst:'Chase Auto', bal:-10000, apr:6.2, min:245, due:'May 5', updated:'1 wk ago'}
+      ],
+      invest: [
+        {id:'roth', name:'Roth IRA', inst:'Fidelity', bal:31200, updated:'1 mo ago'},
+        {id:'401',  name:'401(k)',  inst:'Empower',  bal:29000, updated:'1 mo ago'}
+      ]
+    },
+    goals: [
+      {name:'Pay off credit cards', target:14400, cur:0, due:'Dec 2026', note:'tracking -2 weeks vs plan'},
+      {name:'Emergency fund', target:15000, cur:6800, due:'Jan 2026', note:'on pace'},
+      {name:'$100K net worth', target:100000, cur:18400, due:'age 35', note:'stretch goal'}
+    ],
+    categories:[
+      {n:'Rent', a:1850}, {n:'Groceries', a:620}, {n:'Dining', a:340},
+      {n:'Transport', a:280}, {n:'Utilities', a:210}, {n:'Subscriptions', a:94},
+      {n:'Debt payments', a:972}, {n:'Other', a:974}
+    ],
+    callouts:[
+      {hint:'Biggest change', text:'Dining up <span class="delta-up">$112</span> vs last month — three new restaurants.'},
+      {hint:'Good news',      text:'Groceries down <span class="delta-dn">$48</span>. Meal-prep is sticking.'}
+    ],
+    txns:[
+      {d:'APR 16', n:'Whole Foods', a:-84.20},
+      {d:'APR 15', n:'Paycheck', a:3925.00},
+      {d:'APR 14', n:'Chase Sapphire payment', a:-420.00},
+      {d:'APR 13', n:'Kura Sushi', a:-56.80},
+      {d:'APR 12', n:'Spotify', a:-10.99},
+      {d:'APR 11', n:'Shell', a:-42.10}
+    ],
+    reminders:[
+      {w:'This week', items:[
+        {d:'28',m:'APR', n:'Chase Sapphire', s:'Minimum $210 · auto-pay on', a:-420, state:'upcoming'},
+        {d:'30',m:'APR', n:'Best Buy Store Card', s:'Promo ends Mar 12, 2026 — pay down priority', a:-300, state:'warn'}
+      ]},
+      {w:'Next week', items:[
+        {d:'03',m:'MAY', n:'Amex Everyday', s:'Minimum $85', a:-180, state:'upcoming'},
+        {d:'05',m:'MAY', n:'Car Loan', s:'Fixed $245', a:-245, state:'upcoming'}
+      ]},
+      {w:'Later', items:[
+        {d:'15',m:'MAY', n:'Student Loan', s:'Income-driven $312', a:-312, state:'upcoming'},
+        {d:'12',m:'MAR', n:'Best Buy — PROMO DEADLINE', s:'If balance > $0, retroactive interest (~$580)', a:-2800, state:'deadline'}
+      ]}
+    ],
+    forecast:{base:18400, years:30, retireAt:65, chips:[
+      {id:'job', n:'Change job (+$15k)', effect:1.12},
+      {id:'vac', n:'Vacation (-$4k)', effect:-0.02},
+      {id:'debt', n:'Pay $500 extra on debt', effect:0.18},
+      {id:'roth', n:'Max out Roth', effect:0.24}
+    ]}
+  },
+  david:{
+    name:'David Osei', age:28, city:'Austin, TX',
+    income:6400, spend:3200, saved:3200,
+    trend6:[36200,37800,38900,40100,41200,42000],
+    delta:800,
+    accounts:{
+      cash:[
+        {id:'chk', name:'Checking', inst:'Chase', bal:3400, updated:'today'},
+        {id:'hysa', name:'HYSA', inst:'Wealthfront', bal:18200, updated:'today'},
+        {id:'sav', name:'House DP fund', inst:'Ally', bal:9400, updated:'today'}
+      ],
+      credit:[
+        {id:'vx', name:'Chase Sapphire Reserve', inst:'Chase', bal:-1240, apr:21.99, min:40, due:'Apr 27', updated:'today'}
+      ],
+      loans:[],
+      invest:[
+        {id:'roth', name:'Roth IRA', inst:'Vanguard', bal:8200, updated:'1 wk ago'},
+        {id:'brok', name:'Brokerage — VTI', inst:'Vanguard', bal:3000, updated:'1 wk ago'}
+      ]
+    },
+    goals:[
+      {name:'House down payment', target:60000, cur:9400, due:'2028', note:'~$900/mo needed'},
+      {name:'6-month emergency fund', target:20000, cur:18200, due:'Jul 2026', note:'nearly done'},
+      {name:'$100K net worth by 30', target:100000, cur:42000, due:'age 30', note:'on pace'}
+    ],
+    categories:[
+      {n:'Rent', a:1650}, {n:'Groceries', a:380}, {n:'Dining', a:210},
+      {n:'Transport', a:180}, {n:'Utilities', a:140}, {n:'Subscriptions', a:62},
+      {n:'Fitness', a:90}, {n:'Other', a:488}
+    ],
+    callouts:[
+      {hint:'Biggest change', text:'Savings rate climbed to <span class="delta-dn">50%</span> — highest this year.'},
+      {hint:'Heads up', text:'Credit card usage up <span class="delta-up">$340</span>, still well inside limit.'}
+    ],
+    txns:[
+      {d:'APR 17', n:'Paycheck', a:3200.00},
+      {d:'APR 15', n:'Transfer → HYSA', a:-1500.00},
+      {d:'APR 14', n:'Trader Joe\'s', a:-62.40},
+      {d:'APR 12', n:'REI', a:-184.00},
+      {d:'APR 10', n:'Uber', a:-18.30},
+      {d:'APR 08', n:'Transfer → Roth', a:-500.00}
+    ],
+    reminders:[
+      {w:'This week', items:[
+        {d:'27',m:'APR', n:'Chase Sapphire Reserve', s:'Statement $1,240 — pay in full', a:-1240, state:'upcoming'}
+      ]},
+      {w:'Next week', items:[
+        {d:'01',m:'MAY', n:'Rent', s:'Recurring transfer', a:-1650, state:'upcoming'},
+        {d:'05',m:'MAY', n:'HYSA auto-deposit', s:'$1,500 from checking', a:-1500, state:'upcoming'}
+      ]},
+      {w:'Later', items:[
+        {d:'15',m:'MAY', n:'Roth contribution', s:'$500 scheduled', a:-500, state:'upcoming'}
+      ]}
+    ],
+    forecast:{base:42000, years:30, retireAt:65, chips:[
+      {id:'job', n:'Promotion (+$20k)', effect:1.2},
+      {id:'vac', n:'Europe trip (-$6k)', effect:-0.03},
+      {id:'house', n:'Buy house 2028', effect:-0.05},
+      {id:'roth', n:'Max out Roth + brokerage', effect:0.3}
+    ]}
+  },
+  linda:{
+    name:'Linda Park', age:61, city:'Minneapolis, MN',
+    income:9200, spend:6100, saved:3100,
+    trend6:[812000,820000,826000,831000,835000,840000],
+    delta:5000,
+    accounts:{
+      cash:[
+        {id:'chk', name:'Checking', inst:'US Bank', bal:12400, updated:'today'},
+        {id:'hysa', name:'HYSA', inst:'Marcus', bal:68000, updated:'today'}
+      ],
+      credit:[
+        {id:'amex', name:'Amex Gold', inst:'American Express', bal:-2100, apr:21.49, min:35, due:'May 2', updated:'today'}
+      ],
+      loans:[
+        {id:'mort', name:'Mortgage (10 yrs left)', inst:'Wells Fargo', bal:-84000, apr:3.1, min:1240, due:'May 1', updated:'1 mo ago'}
+      ],
+      invest:[
+        {id:'ira', name:'Traditional IRA', inst:'Schwab', bal:412000, updated:'1 mo ago'},
+        {id:'401', name:'401(k)', inst:'Fidelity', bal:298000, updated:'1 mo ago'},
+        {id:'brok', name:'Brokerage', inst:'Schwab', bal:135700, updated:'1 mo ago'}
+      ]
+    },
+    goals:[
+      {name:'Retire at 65 — target $1.1M', target:1100000, cur:840000, due:'2029', note:'on pace if market cooperates'},
+      {name:'Pay off mortgage', target:84000, cur:0, due:'2035', note:'3.1% — no rush'},
+      {name:'Delay SS to 67', target:1, cur:0.4, due:'decision 2028', note:'$380/mo more if waiting'}
+    ],
+    categories:[
+      {n:'Mortgage', a:1240}, {n:'Groceries', a:640}, {n:'Dining', a:420},
+      {n:'Travel', a:1600}, {n:'Health', a:380}, {n:'Utilities', a:280},
+      {n:'Gifts', a:540}, {n:'Other', a:1000}
+    ],
+    callouts:[
+      {hint:'Biggest change', text:'Travel up <span class="delta-up">$900</span> — Portugal trip booked.'},
+      {hint:'Allocation', text:'Brokerage now <span class="delta-up">16%</span> of NW — consider rebalance.'}
+    ],
+    txns:[
+      {d:'APR 16', n:'TAP Air Portugal', a:-1420.00},
+      {d:'APR 15', n:'Social Security projection (info)', a:0},
+      {d:'APR 14', n:'Whole Foods', a:-186.20},
+      {d:'APR 12', n:'Dividend — VTI', a:+820.00},
+      {d:'APR 10', n:'Mortgage', a:-1240.00},
+      {d:'APR 09', n:'Pharmacy', a:-48.70}
+    ],
+    reminders:[
+      {w:'This week', items:[
+        {d:'27',m:'APR', n:'RMD planning reminder', s:'Start modeling at age 63', a:0, state:'upcoming'}
+      ]},
+      {w:'Next week', items:[
+        {d:'01',m:'MAY', n:'Mortgage', s:'Auto $1,240', a:-1240, state:'upcoming'},
+        {d:'02',m:'MAY', n:'Amex Gold', s:'Statement $2,100', a:-2100, state:'upcoming'}
+      ]},
+      {w:'Later', items:[
+        {d:'15',m:'JUN', n:'Portugal — final payment', s:'Hotel balance', a:-1800, state:'upcoming'}
+      ]}
+    ],
+    forecast:{base:840000, years:20, retireAt:65, chips:[
+      {id:'early', n:'Retire at 63 instead', effect:-0.08},
+      {id:'ss', n:'Delay SS to 70', effect:0.06},
+      {id:'down', n:'Downsize home (+$180k)', effect:0.21},
+      {id:'gift', n:'Gift kids $10k/yr', effect:-0.05}
+    ]}
+  }
+};
+
+function sumAssets(p){
+  let t=0;
+  for (const k of ['cash','invest']) p.accounts[k].forEach(a=>t+=a.bal);
+  return t;
+}
+function sumDebts(p){
+  let t=0;
+  for (const k of ['credit','loans']) p.accounts[k].forEach(a=>t+=a.bal);
+  return t; // negative
+}
+function netWorth(p){ return sumAssets(p) + sumDebts(p); }
+
+const state = {
+  persona:'maya',
+  screen:'home',
+  theme:'light',
+  privacy:false,
+  variant:'editorial',
+  strategy:'avalanche',
+  extra:0,
+  scenarios:{},
+  edit:{open:false,acctId:null,group:null,draft:''},
+  month:'APR',
+};
+
+/* =========================================================
+   ICONS
+========================================================= */
+const ICON = {
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>',
+  wallet:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M3 10h18M17 15h.01"/></svg>',
+  debt:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20V4M3 20h18M7 16V10M12 16V7M17 16v-4"/></svg>',
+  goal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>',
+  more:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18" cy="12" r="1.6"/></svg>',
+  alert:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.7 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.7a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg>',
+  chevron:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>',
+  back:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  bank:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 12 4l9 6M5 10v9M19 10v9M9 10v9M15 10v9M3 20h18"/></svg>',
+  card:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20"/></svg>',
+  loan:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18M3 12h12M3 18h18"/></svg>',
+  chart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 9 11l4 4 8-8"/></svg>',
+  invest:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 9 11l4 4 8-8"/><path d="M14 4h7v7"/></svg>',
+  ef:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 6v6c0 5 4 9 9 10 5-1 9-5 9-10V6Z"/></svg>',
+};
+
+/* =========================================================
+   TAB BAR
+========================================================= */
+const TABS = [
+  {id:'home',      label:'Home',     icon:ICON.home},
+  {id:'accounts',  label:'Accounts', icon:ICON.wallet},
+  {id:'debt',      label:'Debt',     icon:ICON.debt},
+  {id:'goals',     label:'Goals',    icon:ICON.goal},
+  {id:'more',      label:'More',     icon:ICON.more},
+];
+function renderTabs(){
+  const bar = document.getElementById('tabbar');
+  bar.innerHTML = TABS.map(t => `
+    <button class="tab ${state.screen===t.id?'active':''}" data-tab="${t.id}">
+      ${t.icon}<span>${t.label}</span>
+    </button>`).join('');
+  bar.querySelectorAll('.tab').forEach(b=>{
+    b.addEventListener('click', () => nav(b.dataset.tab));
+  });
+}
+
+function nav(id){ state.screen = id; renderApp(); }
+
+/* =========================================================
+   SPARKLINE / CURVE HELPERS
+========================================================= */
+function sparkline(values, w=340, h=52){
+  const min = Math.min(...values), max = Math.max(...values);
+  const span = max-min || 1;
+  const step = w / (values.length-1);
+  const pts = values.map((v,i)=>[i*step, h - ((v-min)/span)*(h-8) - 4]);
+  const d = pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const area = d + ` L ${w} ${h} L 0 ${h} Z`;
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <path d="${area}" fill="var(--taupe-100)" opacity=".5"/>
+    <path d="${d}" stroke="var(--oxblood)" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${pts[pts.length-1][0]}" cy="${pts[pts.length-1][1]}" r="3" fill="var(--oxblood)"/>
+  </svg>`;
+}
+
+function forecastCurve(p){
+  const base = p.forecast.base;
+  const years = p.forecast.years;
+  const w = 340, h = 180;
+  // base growth 6%/yr
+  const baseSeries = [];
+  for (let y=0; y<=years; y++){
+    baseSeries.push(base * Math.pow(1.06, y));
+  }
+  // apply scenarios
+  let mult = 1;
+  p.forecast.chips.forEach(c => { if (state.scenarios[c.id]) mult *= (1 + c.effect); });
+  const series = baseSeries.map(v => v * mult);
+
+  const max = Math.max(...series);
+  const step = w / years;
+  const toPt = (v,i) => [i*step, h - (v/max)*(h-20) - 8];
+  const pts = series.map(toPt);
+  const bpts = baseSeries.map(toPt);
+  const d = pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const bd = bpts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const retireYear = p.forecast.retireAt - p.age;
+  const rx = Math.min(retireYear, years) * step;
+
+  return `<svg class="forecast-svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="farea" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%" stop-color="var(--oxblood)" stop-opacity=".18"/>
+        <stop offset="100%" stop-color="var(--oxblood)" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <line x1="${rx}" x2="${rx}" y1="4" y2="${h-4}" stroke="var(--taupe-300)" stroke-dasharray="3 3" stroke-width="1"/>
+    <text x="${rx+4}" y="14" fill="var(--espresso-soft)" font-size="9" font-family="JetBrains Mono">retire @ ${p.forecast.retireAt}</text>
+    <path d="${bd}" stroke="var(--taupe-300)" stroke-width="1" stroke-dasharray="2 3" fill="none"/>
+    <path d="${d} L ${w} ${h} L 0 ${h} Z" fill="url(#farea)"/>
+    <path d="${d}" stroke="var(--oxblood)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  </svg>`;
+}
+
+/* =========================================================
+   DASHBOARD VARIANTS
+========================================================= */
+function renderDashHome(p){
+  const nw = netWorth(p);
+  const assets = sumAssets(p);
+  const debts = Math.abs(sumDebts(p));
+
+  const assetRows = [].concat(p.accounts.cash, p.accounts.invest).map(a=>`
+    <div class="row"><div class="label"><span class="name">${a.name}</span><span class="sub">${a.inst}</span></div>
+      <div class="value">${fmt(a.bal)}<span class="pct">${Math.round(a.bal/assets*100)}%</span></div>
+    </div>`).join('');
+  const debtRows = [].concat(p.accounts.credit, p.accounts.loans).map(a=>{
+    const promo = a.promo ? `<span class="dot amber"></span>promo ends in ${a.promoDays}d` : (a.apr?`${a.apr}% APR`:'');
+    return `<div class="row"><div class="label"><span class="name">${a.name}</span><span class="sub">${a.inst} · ${promo}</span></div>
+      <div class="value">${fmt(a.bal)}</div>
+    </div>`;
+  }).join('');
+
+  const upcoming = p.reminders[0].items.slice(0,3).map(r => `
+    <div class="row"><div class="label"><span class="name">${r.n}</span><span class="sub">${r.d} ${r.m} · ${r.s}</span></div>
+      <div class="value">${fmt(r.a)}</div></div>`).join('');
+
+  const promoCard = p.accounts.credit.find(c => c.promo);
+  const promoHtml = promoCard ? `
+    <div class="promo-alert" data-action="promo-info">
+      ${ICON.alert}
+      <div>
+        <div class="ttl">Best Buy promo ends in ${promoCard.promoDays} days</div>
+        <div class="body">Your $2,800 Best Buy balance is at 0% — <em>for now</em>. If any balance remains after <strong>Mar 12, 2026</strong>, roughly <strong>$580</strong> in retroactive interest gets backdated to day one.</div>
+        <span class="cta">Plain-English explainer →</span>
+      </div>
+    </div>` : '';
+
+  return `
+    <div class="page active">
+      <div class="hero">
+        <div class="eyebrow">Net worth · ${p.name.split(' ')[0]}</div>
+        <div class="networth">${fmt(nw)}</div>
+        <div class="delta"><span class="num pos">+${fmt(p.delta)}</span> · this month</div>
+        ${sparkline(p.trend6)}
+      </div>
+      <div class="stat-strip">
+        <div class="stat"><div class="eyebrow">In</div><div class="val">${fmt(p.income)}</div><div class="trend">+2.1%</div></div>
+        <div class="stat"><div class="eyebrow">Out</div><div class="val">${fmt(p.spend)}</div><div class="trend">+0.4%</div></div>
+        <div class="stat"><div class="eyebrow">Saved</div><div class="val accent">${fmt(p.saved)}</div><div class="trend">32% rate</div></div>
+      </div>
+      ${promoHtml}
+      <div class="section">
+        <div class="section-head"><h2>Assets</h2><span class="eyebrow">${fmt(assets)}</span></div>
+        ${assetRows}
+      </div>
+      <hr class="divider"/>
+      <div class="section">
+        <div class="section-head"><h2>Debts</h2><span class="eyebrow">${fmt(-debts)}</span></div>
+        ${debtRows || '<div class="row"><div class="label"><span class="sub">No debts. Nice.</span></div></div>'}
+      </div>
+      <hr class="divider"/>
+      <div class="section">
+        <div class="section-head"><h2>This week</h2><a>See all</a></div>
+        ${upcoming}
+      </div>
+      <div style="height:16px"></div>
+    </div>`;
+}
+
+function renderDashEditorial(p){
+  const nw = netWorth(p);
+  return `
+    <div class="page active">
+      <div style="padding:20px 24px 4px">
+        <div class="eyebrow" style="font-family:'Source Serif 4';font-style:italic;text-transform:none;letter-spacing:0;font-size:13px;color:var(--oxblood)">— Ledger № 04</div>
+      </div>
+      <div class="hero">
+        <div class="eyebrow">Chapter one · Where you stand</div>
+        <div class="networth">${fmt(nw)}</div>
+        <div class="delta" style="font-family:'Source Serif 4';font-style:italic;font-size:15px;color:var(--espresso)">
+          Up <span class="num pos">${fmt(p.delta)}</span> this month — the quiet kind of progress.
+        </div>
+        ${sparkline(p.trend6)}
+      </div>
+      <div class="stat-strip">
+        <div class="stat"><div class="eyebrow">01 · In</div><div class="val">${fmt(p.income)}</div></div>
+        <div class="stat"><div class="eyebrow">02 · Out</div><div class="val">${fmt(p.spend)}</div></div>
+        <div class="stat"><div class="eyebrow">03 · Saved</div><div class="val accent">${fmt(p.saved)}</div></div>
+      </div>
+      <div class="section">
+        <div class="eyebrow" style="color:var(--oxblood);margin-bottom:10px">§ IV. Assets</div>
+        ${p.accounts.cash.concat(p.accounts.invest).map(a=>`
+          <div class="row"><div class="label"><span class="name serif" style="font-size:15px">${a.name}</span><span class="sub">${a.inst}</span></div>
+            <div class="value">${fmt(a.bal)}</div></div>`).join('')}
+      </div>
+      <hr class="divider"/>
+      <div class="section">
+        <div class="eyebrow" style="color:var(--oxblood);margin-bottom:10px">§ V. Debts</div>
+        ${p.accounts.credit.concat(p.accounts.loans).map(a=>`
+          <div class="row"><div class="label"><span class="name serif" style="font-size:15px">${a.name}</span><span class="sub">${a.apr||0}% APR</span></div>
+            <div class="value">${fmt(a.bal)}</div></div>`).join('')}
+      </div>
+      <div class="coach">An even month. No fires. Keep going.</div>
+      <div style="height:16px"></div>
+    </div>`;
+}
+
+function renderDashTerminal(p){
+  const nw = netWorth(p);
+  const rows = [].concat(
+    p.accounts.cash.map(a=>['CASH', a.name, a.bal]),
+    p.accounts.invest.map(a=>['INV ', a.name, a.bal]),
+    p.accounts.credit.map(a=>['CRED', a.name, a.bal]),
+    p.accounts.loans.map(a=>['LOAN', a.name, a.bal])
+  );
+  return `
+    <div class="page active">
+      <div style="padding:12px 24px 0"><div class="eyebrow mono">ID=${p.name.toUpperCase().replace(/ /g,'_')} TS=2026.04.18</div></div>
+      <div class="hero" style="padding-top:10px">
+        <div class="eyebrow mono">NET_WORTH</div>
+        <div class="networth" style="font-size:40px">${fmt(nw)}</div>
+        <div class="delta mono" style="font-size:12px">Δ_30D <span class="pos">+${fmt(p.delta)}</span> · Δ_6M <span class="pos">+${fmt(p.trend6[5]-p.trend6[0])}</span></div>
+        ${sparkline(p.trend6)}
+      </div>
+      <div class="stat-strip">
+        <div class="stat"><div class="eyebrow mono">IN</div><div class="val">${fmt(p.income)}</div><div class="trend mono">M0-1 +2.1%</div></div>
+        <div class="stat"><div class="eyebrow mono">OUT</div><div class="val">${fmt(p.spend)}</div><div class="trend mono">M0-1 +0.4%</div></div>
+        <div class="stat"><div class="eyebrow mono">SAV</div><div class="val accent">${fmt(p.saved)}</div><div class="trend mono">RATE 32%</div></div>
+      </div>
+      <div class="section" style="padding-top:14px">
+        <div class="eyebrow mono" style="margin-bottom:6px">REGISTER · ALL ACCOUNTS</div>
+        ${rows.map(([tag,name,bal])=>`
+          <div class="row" style="padding:8px 0">
+            <div class="label"><span class="name mono" style="font-size:12px">${tag} · ${name}</span></div>
+            <div class="value" style="font-size:13px">${fmt(bal)}</div>
+          </div>`).join('')}
+      </div>
+      <div style="height:16px"></div>
+    </div>`;
+}
+
+function renderDashSerif(p){
+  const nw = netWorth(p);
+  return `
+    <div class="page active">
+      <div style="padding:40px 24px 12px">
+        <div class="eyebrow">Good morning, ${p.name.split(' ')[0]}</div>
+      </div>
+      <div class="hero" style="padding-top:4px">
+        <div class="serif" style="font-size:30px;font-weight:500;line-height:1.25;max-width:28ch;margin-bottom:18px">
+          You're worth <span class="num accent">${fmt(nw)}</span>, and the direction is up.
+        </div>
+        ${sparkline(p.trend6)}
+      </div>
+      <div class="coach" style="border-top:1px solid var(--taupe-100)">
+        This month you brought in <strong>${fmt(p.income)}</strong>, spent <strong>${fmt(p.spend)}</strong>, and kept <strong>${fmt(p.saved)}</strong>. That's a saving rate most people aim for and don't hit.
+      </div>
+      <div class="section">
+        <div class="section-head"><h2>What's worth your attention</h2></div>
+        ${(p.accounts.credit.find(c=>c.promo) ? `
+          <div class="row"><div class="label"><span class="name serif" style="font-size:15px">Best Buy promo card</span><span class="sub warn">Window closing — 47 days</span></div><div class="value">${fmt(-2800)}</div></div>` : '')}
+        <div class="row"><div class="label"><span class="name serif" style="font-size:15px">Emergency fund</span><span class="sub">${Math.round(p.accounts.cash.reduce((s,a)=>s+(a.name.toLowerCase().includes('emerg')||a.name.toLowerCase().includes('hysa')?a.bal:0),0)/15000*100)}% to target</span></div><div class="value">${fmt(p.accounts.cash.reduce((s,a)=>s+(a.name.toLowerCase().includes('emerg')||a.name.toLowerCase().includes('hysa')?a.bal:0),0))}</div></div>
+        <div class="row"><div class="label"><span class="name serif" style="font-size:15px">Net worth trend</span><span class="sub">6 months, no drawdowns</span></div><div class="value pos">+${fmt(p.trend6[5]-p.trend6[0])}</div></div>
+      </div>
+      <div class="coach">Nothing urgent today. Worth checking on your Best Buy card if you haven't this week.</div>
+      <div style="height:16px"></div>
+    </div>`;
+}
+
+function renderHome(p){
+  const variant = state.variant;
+  if (variant === 'editorial') return renderDashEditorial(p);
+  if (variant === 'terminal')  return renderDashTerminal(p);
+  if (variant === 'serif')     return renderDashSerif(p);
+  return renderDashHome(p);
+}
+
+/* =========================================================
+   ACCOUNTS
+========================================================= */
+function renderAccounts(p){
+  const group = (title, list) => list.length ? `
+    <div class="acct-group">
+      <div class="eyebrow">${title}</div>
+      ${list.map(a => `
+        <div class="acct-row" data-edit="${a.id}" data-group="${title.toLowerCase()}">
+          <div><div class="name">${a.name}</div><div class="sub">${a.inst} · Updated ${a.updated}</div></div>
+          <div class="balance">${fmt(a.bal)}</div>
+        </div>`).join('')}
+    </div>`:'';
+
+  return `
+    <div class="page active">
+      <div class="page-head">
+        <div><span class="eyebrow">Net worth</span><h1>${fmt(netWorth(p))}</h1></div>
+        <button class="icon-btn" data-nav="add">${ICON.plus}</button>
+      </div>
+      ${group('Cash', p.accounts.cash)}
+      ${group('Credit', p.accounts.credit)}
+      ${group('Loans', p.accounts.loans)}
+      ${group('Investments', p.accounts.invest)}
+      <div style="padding:12px 24px 32px"><button class="icon-btn" style="width:100%;height:40px;border-radius:8px;font-size:13px">Update all balances</button></div>
+    </div>`;
+}
+
+/* =========================================================
+   DEBT
+========================================================= */
+function computeDebt(p, strategy, extra){
+  const debts = [].concat(p.accounts.credit, p.accounts.loans).map(d=>({
+    id:d.id, name:d.name, bal:Math.abs(d.bal), apr:d.apr||0, min:d.min||0,
+    promo:d.promo, promoDays:d.promoDays
+  }));
+  let order;
+  if (strategy==='avalanche') order = [...debts].sort((a,b)=>b.apr-a.apr);
+  else if (strategy==='snowball') order = [...debts].sort((a,b)=>a.bal-b.bal);
+  else order = debts;
+
+  // simple months-to-payoff estimate per debt using min + (extra if first in order and apr>0)
+  const total = debts.reduce((s,d)=>s+d.bal,0);
+  const totalMin = debts.reduce((s,d)=>s+d.min,0);
+  const monthlyPay = totalMin + extra;
+  // crude: payoff months using blended apr
+  const blended = debts.reduce((s,d)=>s+(d.apr/100*d.bal),0) / (total || 1);
+  const r = blended/12;
+  const months = r>0 ? Math.ceil(Math.log(monthlyPay/(monthlyPay-r*total)) / Math.log(1+r)) : Math.ceil(total/monthlyPay);
+  const interest = Math.max(0, monthlyPay*months - total);
+
+  // per-debt months — keep it directional, not a simulation
+  const perRows = order.map((d,i)=>{
+    const baseMos = d.apr>0 ? Math.ceil(d.bal / (d.min || 50)) * 1.2 : Math.ceil(d.bal/(d.min||50));
+    const boost = (i===0 && extra>0) ? extra : 0;
+    const mos = Math.max(1, Math.round(baseMos - boost*0.15));
+    const intr = Math.round(d.bal * (d.apr/100) * mos/12);
+    return {...d, mos, intr};
+  });
+  return {order:perRows, total, months, interest};
+}
+
+function renderDebt(p){
+  const calc = computeDebt(p, state.strategy, state.extra);
+  const payoffYears = (calc.months/12).toFixed(1);
+
+  const topDebt = [...calc.order].filter(d=>d.apr>0).sort((a,b)=>b.apr-a.apr)[0];
+  const coach = topDebt ? (() => {
+    const savings = Math.round(topDebt.bal * (topDebt.apr/100) * 0.6 * (state.extra?1:0.5));
+    const months = Math.max(2, Math.round(topDebt.mos * (state.extra?0.55:0.85)));
+    return `Paying an extra <strong>${fmt(state.extra||200)}/mo</strong> on <strong>${topDebt.name}</strong> saves you <strong>${fmt(Math.max(340, savings+400))}</strong> in interest and pays it off <strong>${months} months</strong> sooner.`;
+  })() : `You're debt-free. Consider routing this energy into investing or goals.`;
+
+  return `
+    <div class="page active">
+      <div class="page-head">
+        <div><span class="eyebrow">Debt payoff</span><h1>${fmt(-calc.total)}</h1></div>
+      </div>
+      <div class="debt-summary">
+        <div class="cell"><div class="eyebrow">Payoff</div><div class="val">${payoffYears}y</div><div class="sub">at current pace</div></div>
+        <div class="cell"><div class="eyebrow">Interest</div><div class="val">${fmt(calc.interest)}</div><div class="sub">projected</div></div>
+        <div class="cell"><div class="eyebrow">Min/mo</div><div class="val">${fmt(calc.order.reduce((s,d)=>s+d.min,0))}</div><div class="sub">combined</div></div>
+      </div>
+      <div class="strategy">
+        <button data-strategy="avalanche" class="${state.strategy==='avalanche'?'active':''}">Avalanche</button>
+        <button data-strategy="snowball" class="${state.strategy==='snowball'?'active':''}">Snowball</button>
+        <button data-strategy="custom" class="${state.strategy==='custom'?'active':''}">Custom</button>
+      </div>
+      <div class="slider-block">
+        <label><span class="txt">Extra per month</span><span class="amt" id="extra-amt">${fmt(state.extra)}</span></label>
+        <input type="range" id="extra-slider" min="0" max="1500" step="25" value="${state.extra}"/>
+      </div>
+      <div class="coach">${coach}</div>
+      <div>
+        ${calc.order.map(d=>`
+          <div class="debt-row ${d.promo?'promo':''}">
+            <div><div class="name">${d.name}</div>
+              <div class="meta">${fmt(d.bal)} · ${d.apr===0?(d.promo?'0% promo':'0%'):d.apr+'%'} · min ${fmt(d.min)}</div>
+              ${d.promo ? `<div class="meta warn" style="color:var(--amber);margin-top:4px">If not paid by ${d.promo}: ~$580 retroactive interest</div>`:''}
+            </div>
+            <div><div class="bal">${fmt(d.bal)}</div><div class="months">${d.mos}mo · ${fmt(d.intr)} int</div></div>
+          </div>`).join('')}
+      </div>
+      <div style="height:16px"></div>
+    </div>`;
+}
+
+/* =========================================================
+   GOALS
+========================================================= */
+function renderGoals(p){
+  return `
+    <div class="page active">
+      <div class="page-head"><div><span class="eyebrow">Goals</span><h1>${p.goals.length} active</h1></div>
+        <button class="icon-btn">${ICON.plus}</button>
+      </div>
+      ${p.goals.map(g=>{
+        const pct = Math.min(100, Math.round((g.cur/(g.target||1))*100));
+        return `
+        <div class="goal">
+          <div class="ttl">${g.name}</div>
+          <div class="sub">Target ${typeof g.target === 'number' && g.target > 1 ? fmt(g.target) : ''} · ${g.due}</div>
+          <div class="bar"><div class="bar-fill" style="width:${pct}%"></div></div>
+          <div class="foot">
+            <span><span class="cur">${typeof g.target === 'number' && g.target > 1 ? fmt(g.cur) : Math.round(g.cur*100)+'%'}</span> of ${typeof g.target === 'number' && g.target > 1 ? fmt(g.target) : '100%'}</span>
+            <span>${pct}% · ${g.note}</span>
+          </div>
+        </div>`;
+      }).join('')}
+      <div style="height:16px"></div>
+    </div>`;
+}
+
+/* =========================================================
+   TRANSACTIONS / INSIGHTS
+========================================================= */
+function renderTxns(p){
+  const total = p.categories.reduce((s,c)=>s+c.a,0);
+  const months = ['JAN','FEB','MAR','APR','MAY','JUN'];
+  return `
+    <div class="page active">
+      <div class="page-head">
+        <button class="page-back" data-nav="more">${ICON.back}Back</button>
+        <div style="text-align:right"><span class="eyebrow">Out this month</span><h1 style="font-size:22px">${fmt(total)}</h1></div>
+      </div>
+      <div class="month-pick">${months.map(m=>`<button class="${m===state.month?'active':''}" data-month="${m}">${m}</button>`).join('')}</div>
+      <div style="padding:8px 24px 12px"><div class="eyebrow">By category</div></div>
+      ${p.categories.map(c=>`
+        <div class="cat-bar">
+          <div class="cat">${c.n}</div><div class="amt">${fmt(c.a)}</div>
+          <div class="cat-track"><div style="width:${Math.round(c.a/total*100)}%"></div></div>
+        </div>`).join('')}
+      ${p.callouts.map(c=>`<div class="callout"><div class="hint">${c.hint}</div>${c.text}</div>`).join('')}
+      <div style="padding:16px 24px 6px"><div class="eyebrow">Recent</div></div>
+      ${p.txns.map(t=>`
+        <div class="txn">
+          <div><div class="d">${t.d}</div><div class="n">${t.n}</div></div>
+          <div class="a ${t.a>0?'pos':''}">${t.a===0?'—':fmt(t.a,2)}</div>
+        </div>`).join('')}
+      <div style="padding:16px 24px 32px"><button class="icon-btn" style="width:100%;height:40px;border-radius:8px;font-size:13px">Add transaction</button></div>
+    </div>`;
+}
+
+/* =========================================================
+   FORECAST
+========================================================= */
+function renderForecast(p){
+  let mult = 1;
+  p.forecast.chips.forEach(c => { if (state.scenarios[c.id]) mult *= (1 + c.effect); });
+  const projected = p.forecast.base * Math.pow(1.06, p.forecast.years) * mult;
+  return `
+    <div class="page active">
+      <div class="page-head">
+        <button class="page-back" data-nav="more">${ICON.back}Back</button>
+        <div style="text-align:right"><span class="eyebrow">In ${p.forecast.years} years</span></div>
+      </div>
+      <div class="forecast-hero">
+        <div class="proj">${fmtShort(projected)}</div>
+        <div class="sub">Projected net worth · 6% base return · toggle scenarios below</div>
+      </div>
+      ${forecastCurve(p)}
+      <div class="chips">
+        ${p.forecast.chips.map(c=>`<button class="chip ${state.scenarios[c.id]?'active':''}" data-chip="${c.id}">${c.n}</button>`).join('')}
+      </div>
+      <div class="milestone-note">Dashed line is the baseline. Scenarios multiply your trajectory — not a guarantee, just a useful lie.</div>
+      <div style="height:16px"></div>
+    </div>`;
+}
+
+/* =========================================================
+   REMINDERS
+========================================================= */
+function renderReminders(p){
+  return `
+    <div class="page active">
+      <div class="page-head">
+        <button class="page-back" data-nav="more">${ICON.back}Back</button>
+        <div style="text-align:right"><span class="eyebrow">Reminders</span><h1 style="font-size:22px">Due soon</h1></div>
+      </div>
+      ${p.reminders.map(wk => `
+        <div class="week-head">${wk.w}</div>
+        ${wk.items.map(r => `
+          <div class="rem ${r.state==='warn'||r.state==='deadline'?'warn-event':''}">
+            <div class="date"><div class="d">${r.d}</div><div class="m">${r.m}</div></div>
+            <div class="body"><div class="n">${r.n}</div><div class="s">${r.s}</div></div>
+            <div class="amt">${r.a?fmt(r.a):'—'}</div>
+          </div>`).join('')}
+      `).join('')}
+      <div style="height:16px"></div>
+    </div>`;
+}
+
+/* =========================================================
+   ADD ACCOUNT
+========================================================= */
+function renderAddAccount(){
+  const tiles = [
+    ['Checking', ICON.bank, 'Cash you can spend'],
+    ['Savings',  ICON.ef,   'Set it aside'],
+    ['Credit card', ICON.card, 'Track APR + due date'],
+    ['Loan',     ICON.loan, 'Student, auto, mortgage'],
+    ['Investment', ICON.invest, 'Roth, 401(k), brokerage'],
+    ['Other',    ICON.wallet, 'Manual asset or debt']
+  ];
+  return `
+    <div class="page active">
+      <div class="page-head">
+        <button class="page-back" data-nav="accounts">${ICON.back}Back</button>
+        <div style="text-align:right"><span class="eyebrow">Step 1 of 4</span><h1 style="font-size:22px">Add account</h1></div>
+      </div>
+      <div style="padding:4px 24px 12px;color:var(--espresso-soft);font-size:13px">What kind of account?</div>
+      <div class="type-grid">
+        ${tiles.map(([n,ic,s])=>`
+          <button class="type-tile"><div class="ic">${ic}</div><div class="n">${n}</div><div class="s">${s}</div></button>`).join('')}
+      </div>
+      <div style="padding:16px 24px 32px;color:var(--espresso-soft);font-size:12px">We never connect to your bank. You'll enter a starting balance and APR in the next step.</div>
+    </div>`;
+}
+
+/* =========================================================
+   MORE (hub)
+========================================================= */
+function renderMore(p){
+  return `
+    <div class="page active">
+      <div class="page-head"><div><span class="eyebrow">${p.name}</span><h1>More</h1></div></div>
+      <div style="padding:0 24px">
+        <div class="row pressable" data-nav="txns"><div class="label"><span class="name">Transactions & spending</span><span class="sub">Categories, callouts, recent</span></div><div class="value">${ICON.chevron}</div></div>
+        <div class="row pressable" data-nav="forecast"><div class="label"><span class="name">Forecast & scenarios</span><span class="sub">Project 30 years out</span></div><div class="value">${ICON.chevron}</div></div>
+        <div class="row pressable" data-nav="reminders"><div class="label"><span class="name">Reminders & due dates</span><span class="sub">Next: ${p.reminders[0].items[0].n}</span></div><div class="value">${ICON.chevron}</div></div>
+        <div class="row pressable" data-nav="add"><div class="label"><span class="name">Add account</span><span class="sub">Manual setup, ~60 seconds</span></div><div class="value">${ICON.chevron}</div></div>
+        <div class="row"><div class="label"><span class="name">Export data</span><span class="sub">CSV · your data, your copy</span></div><div class="value">${ICON.chevron}</div></div>
+        <div class="row"><div class="label"><span class="name">About Equitas</span><span class="sub">v0.4 prototype</span></div><div class="value">${ICON.chevron}</div></div>
+      </div>
+      <div style="height:16px"></div>
+    </div>`;
+}
+
+/* =========================================================
+   PROMO INFO PAGE
+========================================================= */
+function renderPromoInfo(p){
+  const b = p.accounts.credit.find(c=>c.promo);
+  if (!b) return `<div class="page active"><div class="page-head"><button class="page-back" data-nav="home">${ICON.back}Back</button></div><div class="section"><p>No promo balances for this persona.</p></div></div>`;
+  return `
+    <div class="page active">
+      <div class="page-head">
+        <button class="page-back" data-nav="home">${ICON.back}Back</button>
+        <div style="text-align:right"><span class="eyebrow">Deferred interest</span></div>
+      </div>
+      <div style="padding:4px 24px 16px">
+        <h1 class="serif" style="font-size:26px;font-weight:600;margin:0 0 8px">The Best Buy trap, in plain English</h1>
+        <p style="color:var(--espresso-soft);font-size:14px;line-height:1.55">
+          Your card is at <strong>0% APR</strong> — but only until <strong>Mar 12, 2026</strong>. If you leave even <strong>$1</strong> on the card after that date, the lender charges you interest <em>retroactively</em> on the whole original balance. That's called <em>deferred interest</em>, and it's different from a normal promo.
+        </p>
+      </div>
+      <div class="section" style="padding-top:0">
+        <div class="row"><div class="label"><span class="name">Current balance</span></div><div class="value">${fmt(b.bal)}</div></div>
+        <div class="row"><div class="label"><span class="name">Promo ends</span></div><div class="value">Mar 12, 2026</div></div>
+        <div class="row"><div class="label"><span class="name">Days left</span></div><div class="value warn">${b.promoDays}</div></div>
+        <div class="row"><div class="label"><span class="name">Estimated retro interest</span><span class="sub">if not paid by deadline</span></div><div class="value warn">$580</div></div>
+        <div class="row"><div class="label"><span class="name">To clear it in time</span><span class="sub">pay this each month</span></div><div class="value accent">${fmt(Math.ceil(Math.abs(b.bal)/1.5))}</div></div>
+      </div>
+      <div class="coach">Treat this card like it has the highest APR in your stack — because it <strong>will</strong>, the moment the promo ends with a balance on it.</div>
+      <div style="height:16px"></div>
+    </div>`;
+}
+
+/* =========================================================
+   ROUTING
+========================================================= */
+function renderApp(){
+  const p = PERSONAS[state.persona];
+  const body = document.getElementById('appbody');
+  let html;
+  switch(state.screen){
+    case 'home':      html = renderHome(p); break;
+    case 'accounts':  html = renderAccounts(p); break;
+    case 'debt':      html = renderDebt(p); break;
+    case 'goals':     html = renderGoals(p); break;
+    case 'more':      html = renderMore(p); break;
+    case 'txns':      html = renderTxns(p); break;
+    case 'forecast':  html = renderForecast(p); break;
+    case 'reminders': html = renderReminders(p); break;
+    case 'add':       html = renderAddAccount(); break;
+    case 'promo':     html = renderPromoInfo(p); break;
+    default:          html = renderHome(p);
+  }
+  body.innerHTML = html;
+  body.scrollTop = 0;
+  renderTabs();
+  wireScreenEvents();
+}
+
+/* =========================================================
+   SCREEN-SCOPED EVENTS
+========================================================= */
+function wireScreenEvents(){
+  document.querySelectorAll('[data-nav]').forEach(el => {
+    el.addEventListener('click', () => nav(el.dataset.nav));
+  });
+  document.querySelectorAll('[data-action="promo-info"]').forEach(el => {
+    el.addEventListener('click', () => nav('promo'));
+  });
+  // account edit
+  document.querySelectorAll('.acct-row[data-edit]').forEach(el => {
+    el.addEventListener('click', () => openEdit(el.dataset.edit, el.dataset.group));
+  });
+  // debt slider + strategy
+  const slider = document.getElementById('extra-slider');
+  if (slider){
+    slider.addEventListener('input', e => {
+      const v = parseInt(e.target.value,10);
+      state.extra = v;
+      document.getElementById('extra-amt').textContent = fmt(v);
+      // re-render debt rows without full redraw to keep slider focus
+      const p = PERSONAS[state.persona];
+      const calc = computeDebt(p, state.strategy, v);
+      // tween months/interest in summary
+      const payoffYears = (calc.months/12).toFixed(1);
+      document.querySelectorAll('.debt-summary .cell .val')[0].textContent = payoffYears+'y';
+      tweenText(document.querySelectorAll('.debt-summary .cell .val')[1], calc.interest);
+      // update rows
+      const rows = document.querySelectorAll('.debt-row');
+      calc.order.forEach((d,i)=>{
+        if (!rows[i]) return;
+        rows[i].querySelector('.months').textContent = `${d.mos}mo · ${fmt(d.intr)} int`;
+      });
+    });
+  }
+  document.querySelectorAll('[data-strategy]').forEach(b => {
+    b.addEventListener('click', () => {
+      state.strategy = b.dataset.strategy;
+      renderApp();
+    });
+  });
+  // forecast chips
+  document.querySelectorAll('[data-chip]').forEach(c => {
+    c.addEventListener('click', () => {
+      state.scenarios[c.dataset.chip] = !state.scenarios[c.dataset.chip];
+      renderApp();
+    });
+  });
+  // month picker (decorative)
+  document.querySelectorAll('[data-month]').forEach(b => {
+    b.addEventListener('click', () => { state.month = b.dataset.month; renderApp(); });
+  });
+}
+
+/* =========================================================
+   EDIT SHEET
+========================================================= */
+function openEdit(id, groupKey){
+  const p = PERSONAS[state.persona];
+  const groups = {cash:'cash', credit:'credit', loans:'loans', investments:'invest'};
+  const gk = groups[groupKey] || 'cash';
+  const acct = p.accounts[gk].find(a => a.id === id);
+  if (!acct) return;
+  state.edit = {open:true, acctId:id, group:gk, draft:String(Math.abs(acct.bal))};
+  document.getElementById('edit-name').textContent = acct.name;
+  document.getElementById('edit-eyebrow').textContent = gk === 'credit' || gk === 'loans' ? 'EDIT BALANCE OWED' : 'EDIT BALANCE';
+  document.getElementById('edit-val').textContent = fmt(Math.abs(acct.bal));
+  document.getElementById('edit-sheet').classList.add('show');
+  renderKeypad();
+}
+function closeEdit(commit){
+  const sheet = document.getElementById('edit-sheet');
+  sheet.classList.remove('show');
+  if (commit){
+    const p = PERSONAS[state.persona];
+    const acct = p.accounts[state.edit.group].find(a => a.id === state.edit.acctId);
+    const sign = acct.bal < 0 ? -1 : 1;
+    const newVal = (parseFloat(state.edit.draft) || 0) * sign;
+    acct.bal = newVal;
+    acct.updated = 'just now';
+    // keep trend aligned-ish: recompute networth, nudge latest trend value
+    p.trend6[5] = netWorth(p);
+    // re-render; numbers will counter-tween via tweenText where applied
+    renderApp();
+  }
+  state.edit = {open:false,acctId:null,group:null,draft:''};
+}
+function renderKeypad(){
+  const keys = ['1','2','3','4','5','6','7','8','9','.','0','⌫'];
+  const pad = document.getElementById('keypad');
+  pad.innerHTML = keys.map(k => `<button data-key="${k}">${k}</button>`).join('') +
+    `<button class="save" data-key="SAVE">Save</button>`;
+  pad.querySelectorAll('[data-key]').forEach(b=>{
+    b.addEventListener('click', () => pressKey(b.dataset.key));
+  });
+  // tap outside to dismiss
+  document.getElementById('edit-sheet').addEventListener('click', e => {
+    if (e.target.id === 'edit-sheet') closeEdit(false);
+  }, {once:true});
+}
+function pressKey(k){
+  if (k === 'SAVE'){ closeEdit(true); return; }
+  let d = state.edit.draft;
+  if (k === '⌫') d = d.slice(0,-1);
+  else if (k === '.' && d.includes('.')) { /* no-op */ }
+  else d += k;
+  if (d === '') d = '0';
+  state.edit.draft = d;
+  const n = parseFloat(d) || 0;
+  document.getElementById('edit-val').textContent = fmt(n);
+}
+
+/* =========================================================
+   NUMBER TWEEN
+========================================================= */
+function tweenText(el, target, opts={}){
+  if (!el) return;
+  const dur = opts.dur || 420;
+  const prefix = opts.prefix ?? '$';
+  const start = parseFloat((el.textContent||'').replace(/[^\d.-]/g,'')) || 0;
+  const t0 = performance.now();
+  const ease = t => 1 - Math.pow(1-t, 3);
+  function frame(now){
+    const t = Math.min(1, (now-t0)/dur);
+    const v = start + (target-start)*ease(t);
+    el.textContent = prefix + Math.round(v).toLocaleString('en-US');
+    if (t<1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+/* =========================================================
+   ALT-DASH MINI MOCKS
+========================================================= */
+function renderMiniMocks(){
+  const p = PERSONAS[state.persona];
+  document.getElementById('mini-a').innerHTML = `
+    <div class="eb">— Ledger № 04</div>
+    <div class="eb">Chapter one</div>
+    <div class="big">${fmt(netWorth(p))}</div>
+    <div class="num01" style="font-style:italic">Up $1,240 — the quiet kind.</div>
+    <hr/>
+    <h4>§ IV. Assets</h4>
+    <div class="ln"><span>Checking</span><span>${fmt(p.accounts.cash[0].bal)}</span></div>
+    <div class="ln"><span>Savings</span><span>${fmt(p.accounts.cash[1]?.bal||0)}</span></div>
+    <hr/>
+    <h4>§ V. Debts</h4>
+    <div class="ln"><span>Chase Sapphire</span><span>-$8.4k</span></div>`;
+  document.getElementById('mini-b').innerHTML = `
+    <div class="eb">NET_WORTH</div>
+    <div class="big">${fmt(netWorth(p))}</div>
+    <div class="eb">Δ_30D +$1,240 · Δ_6M +$3,200</div>
+    <hr/>
+    <div class="tbl">
+      <span>CASH · CHK</span><span>$4,200</span>
+      <span>CASH · SAV</span><span>$6,800</span>
+      <span>INV  · ROTH</span><span>$31.2k</span>
+      <span>INV  · 401K</span><span>$29.0k</span>
+      <span>CRED · CHASE</span><span>-$8.4k</span>
+      <span>CRED · AMEX</span><span>-$3.2k</span>
+      <span>CRED · BBY*</span><span>-$2.8k</span>
+      <span>LOAN · NELNET</span><span>-$28.4k</span>
+    </div>`;
+  document.getElementById('mini-c').innerHTML = `
+    <div class="eb">Good morning</div>
+    <div class="big">${fmt(netWorth(p))}</div>
+    <div class="quote">You're worth $18.4k, and the direction is up.</div>
+    <hr/>
+    <div class="eb">What's worth your attention</div>
+    <div class="ln"><span>Best Buy promo</span><span>47d</span></div>
+    <div class="ln"><span>Emergency fund</span><span>45%</span></div>
+    <div class="quote">Nothing urgent today.</div>`;
+}
+
+/* =========================================================
+   TOP-BAR EVENTS
+========================================================= */
+document.getElementById('persona-select').addEventListener('change', e => {
+  state.persona = e.target.value;
+  // reset ephemeral bits
+  state.extra = 0; state.strategy = 'avalanche'; state.scenarios = {};
+  renderApp(); renderMiniMocks();
+});
+document.getElementById('theme-btn').addEventListener('click', () => {
+  state.theme = state.theme==='light' ? 'dark' : 'light';
+  document.documentElement.dataset.theme = state.theme;
+  const btn = document.getElementById('theme-btn');
+  btn.classList.toggle('active', state.theme==='dark');
+  // swap icon
+  document.getElementById('theme-ic').outerHTML = state.theme==='dark'
+    ? '<svg id="theme-ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>'
+    : '<svg id="theme-ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>';
+});
+document.getElementById('privacy-btn').addEventListener('click', () => {
+  state.privacy = !state.privacy;
+  document.documentElement.dataset.privacy = state.privacy;
+  document.getElementById('privacy-btn').classList.toggle('active', state.privacy);
+});
+
+/* alt-dashboard swap */
+document.getElementById('alt-grid').addEventListener('click', e => {
+  const card = e.target.closest('.alt-card');
+  if (!card) return;
+  document.querySelectorAll('.alt-card').forEach(c => c.classList.remove('active'));
+  card.classList.add('active');
+  state.variant = card.dataset.variant;
+  if (state.screen === 'home') renderApp();
+});
+
+/* =========================================================
+   BOOT
+========================================================= */
+renderApp();
+renderMiniMocks();
+</script>
+</body>
+</html>

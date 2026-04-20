@@ -1,0 +1,15 @@
+{
+  "name": "@ledger/mobile",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "echo 'Expo app placeholder'",
+    "android": "echo 'Expo app placeholder'",
+    "ios": "echo 'Expo app placeholder'",
+    "web": "echo 'Expo app placeholder'",
+    "lint": "echo 'no-op'",
+    "typecheck": "echo 'no-op'"
+  },
+  "dependencies": {},
+  "private": true
+}

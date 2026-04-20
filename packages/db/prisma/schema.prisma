@@ -1,0 +1,104 @@
+// Ledger — Prisma schema
+// Dev uses SQLite. In prod swap provider to postgresql and point
+// DATABASE_URL at Neon/Supabase.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(cuid())
+  name       String
+  email      String?  @unique
+  age        Int      @default(26)
+  retireAge  Int      @default(55)
+  returnRate Float    @default(6.5)
+  joinedYear Int      @default(2024)
+
+  incomeNet       Float @default(0)
+  incomeGross     Float @default(0)
+  expensesMonthly Float @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accounts     Account[]
+  goals        Goal[]
+  milestones   Milestone[]
+  transactions Transaction[]
+}
+
+model Account {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  institution String
+  /// `cash` | `investment` | `debt`
+  type        String
+  balance     Float
+  updated     String   @default("just now")
+  apr         Float?
+  monthly     Float?
+  color       String   @default("chart-1")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@index([userId])
+}
+
+model Goal {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  /// `debt` | `purchase`
+  kind      String
+  target    Float
+  current   Float
+  eta       String
+  monthly   Float
+  projected String
+  onTrack   Boolean  @default(true)
+  apr       Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Milestone {
+  id     String @id @default(cuid())
+  userId String
+  year   Int
+  label  String
+  value  Float
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, year])
+}
+
+model Transaction {
+  id        String   @id @default(cuid())
+  userId    String
+  accountId String?
+  date      String
+  merchant  String
+  category  String
+  amount    Float
+  createdAt DateTime @default(now())
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account Account? @relation(fields: [accountId], references: [id], onDelete: SetNull)
+
+  @@index([userId, date])
+}
