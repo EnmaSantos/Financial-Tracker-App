@@ -3,9 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@ledger/db";
 import { AccountCreate, AccountType } from "@ledger/shared";
-
-// TODO(Phase 5): resolve userId from session instead of the hardcoded persona.
-const CURRENT_USER_ID = "maya";
+import { requireUser } from "@/lib/auth";
 
 export type ActionResult =
   | { ok: true }
@@ -22,8 +20,9 @@ export async function updateAccountBalance(
     return { ok: false, error: "Invalid balance." };
   }
 
+  const user = await requireUser();
   const existing = await prisma.account.findFirst({
-    where: { id: accountId, userId: CURRENT_USER_ID },
+    where: { id: accountId, userId: user.id },
   });
   if (!existing) return { ok: false, error: "Account not found." };
 
@@ -49,6 +48,7 @@ export async function updateAccountBalance(
 export async function createAccount(
   formData: FormData,
 ): Promise<ActionResult> {
+  const rawPromo = String(formData.get("promoEndsAt") ?? "").trim();
   const raw = {
     name: String(formData.get("name") ?? "").trim(),
     institution: String(formData.get("institution") ?? "").trim(),
@@ -58,6 +58,7 @@ export async function createAccount(
     monthly: formData.get("monthly") ? Number(formData.get("monthly")) : null,
     updated: "just now",
     color: "chart-1",
+    promoEndsAt: rawPromo ? new Date(rawPromo) : null,
   };
 
   const parsed = AccountCreate.safeParse(raw);
@@ -72,13 +73,14 @@ export async function createAccount(
     return { ok: false, error: "Please check the form.", fieldErrors };
   }
 
+  const user = await requireUser();
   const data = parsed.data;
   const typed = AccountType.parse(data.type);
   const signedBalance = typed === "debt" ? -Math.abs(data.balance) : data.balance;
 
   await prisma.account.create({
     data: {
-      userId: CURRENT_USER_ID,
+      userId: user.id,
       name: data.name,
       institution: data.institution,
       type: typed,
@@ -87,6 +89,7 @@ export async function createAccount(
       apr: data.apr ?? null,
       monthly: data.monthly ?? null,
       color: data.color ?? "chart-1",
+      promoEndsAt: data.promoEndsAt ?? null,
     },
   });
 
@@ -98,8 +101,9 @@ export async function createAccount(
 export async function deleteAccount(accountId: string): Promise<ActionResult> {
   if (!accountId) return { ok: false, error: "Missing account id." };
 
+  const user = await requireUser();
   const existing = await prisma.account.findFirst({
-    where: { id: accountId, userId: CURRENT_USER_ID },
+    where: { id: accountId, userId: user.id },
   });
   if (!existing) return { ok: false, error: "Account not found." };
 

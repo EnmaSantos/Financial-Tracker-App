@@ -91,28 +91,37 @@ export function AddAccountForm({ onDone }: { onDone?: () => void }) {
       </Field>
 
       {type === "debt" && (
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="APR %" error={fieldErrors.apr}>
-            <input
-              name="apr"
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="22.99"
-              className={inputCls}
-            />
+        <>
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="APR %" error={fieldErrors.apr}>
+              <input
+                name="apr"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="22.99"
+                className={inputCls}
+              />
+            </Field>
+            <Field label="Monthly payment" error={fieldErrors.monthly}>
+              <input
+                name="monthly"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="250"
+                className={inputCls}
+              />
+            </Field>
+          </div>
+          <Field
+            label="0% promo ends (optional)"
+            error={fieldErrors.promoEndsAt}
+            hint="For store cards with a deferred-interest window."
+          >
+            <input name="promoEndsAt" type="date" className={inputCls} />
           </Field>
-          <Field label="Monthly payment" error={fieldErrors.monthly}>
-            <input
-              name="monthly"
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="250"
-              className={inputCls}
-            />
-          </Field>
-        </div>
+        </>
       )}
 
       {state && !state.ok && !Object.keys(fieldErrors).length && (

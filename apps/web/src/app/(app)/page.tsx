@@ -1,4 +1,5 @@
 import { getDashboard } from "@/lib/dashboard";
+import { requireUser } from "@/lib/auth";
 import { Masthead } from "@/components/dashboard/Masthead";
 import { NetWorthHero } from "@/components/dashboard/NetWorthHero";
 import { FlowStrip } from "@/components/dashboard/FlowStrip";
@@ -7,19 +8,19 @@ import { AccountLists } from "@/components/dashboard/AccountLists";
 import { ProjectionPreview } from "@/components/dashboard/ProjectionPreview";
 import { RemindersPanel } from "@/components/dashboard/RemindersPanel";
 
-// TODO(Phase 5): resolve userId from session instead of the hardcoded persona.
-const CURRENT_USER_ID = "maya";
-
 export default async function Home() {
-  const d = await getDashboard(CURRENT_USER_ID);
+  const user = await requireUser();
+  const d = await getDashboard(user.id);
 
   if (!d) {
+    // Session points at a user id but the ledger row was cleared — show an
+    // empty-state hint instead of crashing.
     return (
       <div>
         <div className="label-kicker mb-2">No ledger yet</div>
         <h1 className="display text-4xl mb-4">Equitas Financial</h1>
         <p className="text-ink-2">
-          User not found. Run <code className="font-mono">pnpm db:seed</code>.
+          Your account has no data yet. Add your first account from the Accounts page.
         </p>
       </div>
     );

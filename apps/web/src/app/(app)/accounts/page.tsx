@@ -1,23 +1,28 @@
 import type { Account } from "@ledger/db";
 import { getDashboard } from "@/lib/dashboard";
+import { requireUser } from "@/lib/auth";
 import { fmt$ } from "@/lib/money";
 import { BalanceEditor } from "@/components/accounts/BalanceEditor";
 import { DeleteAccountButton } from "@/components/accounts/DeleteAccountButton";
 import { AddAccountButton } from "@/components/accounts/AddAccountButton";
 
-// TODO(Phase 5): resolve userId from session.
-const CURRENT_USER_ID = "maya";
-
 export default async function AccountsPage() {
-  const d = await getDashboard(CURRENT_USER_ID);
+  const user = await requireUser();
+  const d = await getDashboard(user.id);
 
   if (!d) {
     return (
       <div>
-        <h1 className="display text-4xl mb-4">Accounts</h1>
-        <p className="text-ink-2">
-          User not found. Run <code className="font-mono">pnpm db:seed</code>.
-        </p>
+        <header className="masthead-row">
+          <div>
+            <div className="label-kicker">Ledger</div>
+            <h1 className="display mt-1" style={{ fontSize: "clamp(40px, 5vw, 56px)" }}>
+              Accounts
+            </h1>
+          </div>
+          <AddAccountButton />
+        </header>
+        <p className="mt-10 text-ink-2">No accounts yet. Add your first one above.</p>
       </div>
     );
   }

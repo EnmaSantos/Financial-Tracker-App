@@ -9,22 +9,38 @@ type Reminder = {
 };
 
 /**
- * Derive actionable reminders from user data. No dedicated "due date" column
- * yet — these surface the strongest signals available today. Promo dates are
- * hard-coded against the Best Buy account until the schema gains a
- * `promoEndsAt` field (tracked in AccountLists.tsx).
+ * Derive actionable reminders from user data. Promo reminders are surfaced
+ * for any debt with a `promoEndsAt` in the next 120 days (or recently past,
+ * so the user doesn't miss a just-expired window).
  */
 function buildReminders(accounts: Account[], goals: Goal[]): Reminder[] {
   const out: Reminder[] = [];
+  const now = Date.now();
+  const WINDOW_MS = 120 * 24 * 60 * 60 * 1000;
 
-  const promoAcct = accounts.find((a) =>
-    a.name.toLowerCase().includes("best buy"),
+  const promoAccts = accounts.filter(
+    (a) =>
+      a.type === "debt" &&
+      a.promoEndsAt &&
+      a.promoEndsAt.getTime() - now < WINDOW_MS,
   );
-  if (promoAcct) {
+  for (const acct of promoAccts) {
+    const end = acct.promoEndsAt!;
+    const daysOut = Math.round((end.getTime() - now) / (24 * 60 * 60 * 1000));
+    const when = end.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+    const lead =
+      daysOut < 0
+        ? `ended ${Math.abs(daysOut)}d ago`
+        : daysOut === 0
+          ? "ends today"
+          : `in ${daysOut}d`;
     out.push({
       kind: "promo",
-      title: "Best Buy promo ends Mar 12",
-      detail: `${fmt$(Math.abs(promoAcct.balance))} balance will accrue ${promoAcct.apr?.toFixed(1) ?? "—"}% if unpaid`,
+      title: `${acct.name} promo ends ${when}`,
+      detail: `${fmt$(Math.abs(acct.balance))} balance · ${acct.apr?.toFixed(1) ?? "—"}% APR after · ${lead}`,
       meta: "PROMO",
     });
   }
@@ -33,7 +49,8 @@ function buildReminders(accounts: Account[], goals: Goal[]): Reminder[] {
   const worstDebt = accounts
     .filter((a) => a.type === "debt" && (a.apr ?? 0) >= 20)
     .sort((a, b) => (b.apr ?? 0) - (a.apr ?? 0))[0];
-  if (worstDebt && worstDebt.id !== promoAcct?.id) {
+  const promoIds = new Set(promoAccts.map((a) => a.id));
+  if (worstDebt && !promoIds.has(worstDebt.id)) {
     out.push({
       kind: "high-apr",
       title: `${worstDebt.name} is expensive`,

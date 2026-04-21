@@ -12,10 +12,12 @@ datasource db {
 }
 
 model User {
-  id         String   @id @default(cuid())
-  name       String
-  email      String?  @unique
-  age        Int      @default(26)
+  id           String  @id @default(cuid())
+  name         String
+  email        String? @unique
+  /// bcrypt hash; null for legacy/demo rows that predate auth.
+  passwordHash String?
+  age          Int     @default(26)
   retireAge  Int      @default(55)
   returnRate Float    @default(6.5)
   joinedYear Int      @default(2024)

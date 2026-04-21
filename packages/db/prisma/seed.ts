@@ -3,8 +3,13 @@
  * Numbers mirror `project/src/data.js` in the design bundle.
  */
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
+
+// Demo credentials — every seeded persona logs in with this password.
+// In production, users set their own at signup.
+const DEMO_PASSWORD = "password123";
 
 async function main() {
   // Wipe everything deterministic-first so `pnpm db:seed` is idempotent.
@@ -14,11 +19,14 @@ async function main() {
   await prisma.account.deleteMany();
   await prisma.user.deleteMany();
 
+  const demoHash = await bcrypt.hash(DEMO_PASSWORD, 10);
+
   const maya = await prisma.user.create({
     data: {
       id: "maya",
       name: "Maya Chen",
       email: "maya@example.com",
+      passwordHash: demoHash,
       age: 32,
       retireAge: 65,
       returnRate: 7.0,
@@ -36,6 +44,7 @@ async function main() {
         id: "david",
         name: "David Park",
         email: "david@example.com",
+        passwordHash: demoHash,
         age: 28,
         retireAge: 60,
         returnRate: 8.5,
@@ -48,6 +57,7 @@ async function main() {
         id: "linda",
         name: "Linda Rossi",
         email: "linda@example.com",
+        passwordHash: demoHash,
         age: 61,
         retireAge: 65,
         returnRate: 5.0,
@@ -103,6 +113,7 @@ async function main() {
   });
 
   console.log("Seeded Maya Chen with", await prisma.account.count({ where: { userId: maya.id } }), "accounts.");
+  console.log(`Demo login password for all seeded personas: ${DEMO_PASSWORD}`);
 }
 
 main()

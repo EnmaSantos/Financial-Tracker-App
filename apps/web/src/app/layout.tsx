@@ -7,7 +7,6 @@ import {
 } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/shell/ThemeProvider";
-import { Sidebar } from "@/components/shell/Sidebar";
 import { ThemeSwitcher } from "@/components/shell/ThemeSwitcher";
 
 const instrumentSerif = Instrument_Serif({
@@ -50,15 +49,7 @@ export default function RootLayout({
     >
       <body className="min-h-full">
         <ThemeProvider>
-          <div className="flex min-h-screen">
-            <Sidebar />
-            <main
-              className="flex-1"
-              style={{ padding: "40px 48px 80px", maxWidth: 1280 }}
-            >
-              {children}
-            </main>
-          </div>
+          {children}
           <ThemeSwitcher />
         </ThemeProvider>
       </body>

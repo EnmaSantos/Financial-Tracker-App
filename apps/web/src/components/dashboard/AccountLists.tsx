@@ -29,22 +29,17 @@ function AssetRow({ a }: { a: Account }) {
   );
 }
 
-/**
- * The Best Buy line carries a promo-expiration warning. Flagged by name for
- * now — a structured `promoEndsAt` column on Account is a future improvement.
- */
-function isPromoAccount(a: Account) {
-  return a.name.toLowerCase().includes("best buy");
-}
-
 function DebtRow({ a }: { a: Account }) {
-  const promo = isPromoAccount(a);
+  const promoEnd = a.promoEndsAt;
+  const promoLabel = promoEnd
+    ? `PROMO ENDS ${promoEnd.toLocaleDateString("en-US", { month: "short", day: "numeric" }).toUpperCase()}`
+    : null;
   return (
     <div className="flex justify-between items-baseline">
       <div className="flex flex-col">
         <div className="flex items-center gap-1.5">
           <span className="font-serif-text text-[16px]">{a.name}</span>
-          {promo && (
+          {promoEnd && (
             <span
               aria-hidden="true"
               className="inline-block w-1.5 h-1.5 rounded-full"
@@ -56,12 +51,12 @@ function DebtRow({ a }: { a: Account }) {
           <span className="text-[11px] text-ink-3 font-sans">
             {a.institution}
           </span>
-          {promo && (
+          {promoLabel && (
             <span
               className="font-mono text-[10px] font-medium"
               style={{ color: "var(--color-chart-3)" }}
             >
-              PROMO ENDS MAR 12
+              {promoLabel}
             </span>
           )}
         </div>

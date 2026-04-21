@@ -315,7 +315,7 @@ Non-goals: real persistence, real auth, real data entry beyond the demo flows. T
 -   Don't use rounded-2xl everywhere --- soft corners (6--8px) only where needed.
 -   Don't show fake bank logos. Institution names in text only.
 -   Don't invent features outside the brief (no AI chat, no social, no crypto).
--   Don't use `localStorage` or `sessionStorage` --- unsupported in the render environment.
+-   Don't use `localStorage` or `sessionStorage` --- unsupported in the render environment.could 
 
 * * * * *
 

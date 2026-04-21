@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon } from "./icons";
+import { logout } from "@/app/actions/auth";
 
 type NavItem = {
   href: string;
@@ -23,7 +24,7 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function Sidebar() {
+export function Sidebar({ userName }: { userName: string }) {
   const pathname = usePathname();
 
   return (
@@ -66,8 +67,19 @@ export function Sidebar() {
         })}
       </div>
 
-      <div className="mt-auto font-sans text-[11px] text-ink-3">
-        Maya Chen · demo
+      <div className="mt-auto flex flex-col gap-2">
+        <div className="font-sans text-[11px] text-ink-3">
+          Signed in as
+          <div className="text-ink-2 truncate">{userName}</div>
+        </div>
+        <form action={logout}>
+          <button
+            type="submit"
+            className="font-mono text-[10px] uppercase tracking-wider text-ink-3 hover:text-ink transition-colors"
+          >
+            Sign out
+          </button>
+        </form>
       </div>
     </nav>
   );

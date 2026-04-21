@@ -1,18 +1,15 @@
 import { getDashboard } from "@/lib/dashboard";
+import { requireUser } from "@/lib/auth";
 import { ScenarioExplorer } from "@/components/scenarios/ScenarioExplorer";
 
-// TODO(Phase 5): resolve userId from session.
-const CURRENT_USER_ID = "maya";
-
 export default async function ScenariosPage() {
-  const d = await getDashboard(CURRENT_USER_ID);
+  const user = await requireUser();
+  const d = await getDashboard(user.id);
   if (!d) {
     return (
       <div>
         <h1 className="display text-4xl mb-4">Scenarios</h1>
-        <p className="text-ink-2">
-          User not found. Run <code className="font-mono">pnpm db:seed</code>.
-        </p>
+        <p className="text-ink-2">Add some accounts first to project your future net worth.</p>
       </div>
     );
   }

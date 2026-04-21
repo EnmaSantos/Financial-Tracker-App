@@ -63,6 +63,8 @@ export const Account = z.object({
   apr: z.number().nullable(),
   monthly: z.number().nullable(),
   color: z.string().default("chart-1"),
+  /** When a 0%-APR promotional window ends, for debt accounts that have one. */
+  promoEndsAt: z.coerce.date().nullable().optional(),
 });
 export type Account = z.infer<typeof Account>;
 

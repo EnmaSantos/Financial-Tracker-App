@@ -41,9 +41,11 @@ The project has been restructured to separate the interactive design prototype f
 *   **Scenario Engine:** Build the "What-If" projection UI, leveraging the existing forecast logic but optimized for the production stack.
 *   **Reminders:** Set up the notification system for upcoming due dates and promo expirations.
 
-### Phase 5: Authentication & Multi-Tenancy
-*   **Auth Integration:** Integrate an authentication provider (e.g., Clerk or NextAuth/Auth.js).
-*   **User Sessions:** Replace the hardcoded `maya` ID with dynamic session-based user identification.
+### Phase 5: Authentication & Multi-Tenancy ✅
+*   **Auth Integration:** Rolled our own stateless JWT session (jose + bcryptjs + cookies()) per the Next.js 16 authentication guide — no third-party provider dependency.
+*   **Routes:** `(app)` route group guards every ledger page via `requireUser()` in its layout; `(auth)` group hosts `/login` and `/signup` and redirects signed-in users home.
+*   **User Sessions:** Replaced the hardcoded `maya` ID across pages and server actions with `requireUser()` from `@/lib/auth`. Session cookie is HttpOnly, SameSite=Lax, 7-day expiry, signed by `SESSION_SECRET` in `.env.local`.
+*   **Password model:** Added `passwordHash` to the `User` schema; seed hashes `password123` for the three demo personas (maya/david/linda) so the existing data is usable from day one.
 
 ---
 *Status Document Generated: April 19, 2026*
