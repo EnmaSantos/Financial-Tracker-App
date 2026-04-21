@@ -47,7 +47,7 @@ export default function RootLayout({
       className={`${instrumentSerif.variable} ${newsreader.variable} ${interTight.variable} ${jetBrainsMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full">
+      <body className="min-h-full" suppressHydrationWarning>
         <ThemeProvider>
           {children}
           <ThemeSwitcher />

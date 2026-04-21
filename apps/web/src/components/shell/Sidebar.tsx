@@ -33,7 +33,7 @@ export function Sidebar({ userName }: { userName: string }) {
       className="flex flex-col gap-8 sticky top-0 h-screen px-8 py-10 border-r border-rule bg-paper-2"
       style={{ width: 280, minWidth: 280 }}
     >
-      <div className="pt-6">
+      <div>
         <div
           className="display"
           style={{ fontSize: 26, letterSpacing: "-0.02em" }}
@@ -43,7 +43,7 @@ export function Sidebar({ userName }: { userName: string }) {
         <div className="label-mono mt-1">a quiet record</div>
       </div>
 
-      <div className="flex flex-col gap-1 pl-4">
+      <div className="flex flex-col gap-1">
         {NAV.map((item) => {
           const IconEl = Icon[item.icon];
           const active = isActive(pathname, item.href);
@@ -53,7 +53,7 @@ export function Sidebar({ userName }: { userName: string }) {
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={[
-                "flex items-center gap-4 px-4 py-3 rounded-md no-underline transition-colors",
+                "flex items-center gap-4 pl-2 pr-4 py-3 rounded-md no-underline transition-colors",
                 "font-sans text-[13px]",
                 active
                   ? "text-ink bg-paper-3"
@@ -67,7 +67,7 @@ export function Sidebar({ userName }: { userName: string }) {
         })}
       </div>
 
-      <div className="mt-auto flex flex-col gap-2">
+      <div className="mt-auto flex flex-col gap-2 pb-6">
         <div className="font-sans text-[11px] text-ink-3">
           Signed in as
           <div className="text-ink-2 truncate">{userName}</div>
