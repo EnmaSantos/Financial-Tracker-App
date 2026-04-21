@@ -11,7 +11,9 @@ export type AuthFormState =
   | {
       ok: false;
       error?: string;
-      fieldErrors?: Partial<Record<"name" | "email" | "password", string>>;
+      fieldErrors?: Partial<
+        Record<"name" | "email" | "password" | "confirmPassword", string>
+      >;
     };
 
 function normalizeEmail(raw: unknown) {
@@ -59,6 +61,7 @@ export async function signup(
   const name = String(formData.get("name") ?? "").trim();
   const email = normalizeEmail(formData.get("email"));
   const password = String(formData.get("password") ?? "");
+  const confirmPassword = String(formData.get("confirmPassword") ?? "");
 
   const fieldErrors: NonNullable<
     Extract<AuthFormState, { ok: false }>["fieldErrors"]
@@ -67,6 +70,8 @@ export async function signup(
   if (!email || !email.includes("@")) fieldErrors.email = "Enter a valid email.";
   const pwErr = validatePassword(password);
   if (pwErr) fieldErrors.password = pwErr;
+  if (!pwErr && confirmPassword !== password)
+    fieldErrors.confirmPassword = "Passwords do not match.";
   if (Object.keys(fieldErrors).length) {
     return { ok: false, fieldErrors };
   }

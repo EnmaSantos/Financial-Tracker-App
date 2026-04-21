@@ -1,4 +1,7 @@
+"use client";
+
 import { Pill } from "@/components/ui/Pill";
+import { CountUp } from "@/components/ui/CountUp";
 import { fmt$ } from "@/lib/money";
 
 type Props = {
@@ -12,10 +15,13 @@ export function NetWorthHero({ netWorth, monthlySaved, savingsRate }: Props) {
   return (
     <div>
       <div className="label-kicker">Net worth · today</div>
-      <div className="display num hero-number mt-2">{fmt$(netWorth)}</div>
-      <div className="stats-row mt-4">
+      <div className="display num hero-number mt-3">
+        <CountUp value={netWorth} />
+      </div>
+      <div className="stats-row mt-6">
         <Pill tone={saving ? "positive" : "negative"}>
-          {saving ? "↑" : "↓"} {fmt$(Math.abs(monthlySaved))} · this month
+          {saving ? "↑" : "↓"}{" "}
+          <CountUp value={Math.abs(monthlySaved)} duration={1.2} /> · this month
         </Pill>
         <span className="text-ink-3 font-sans text-xs">
           saving rate {(savingsRate * 100).toFixed(0)}%

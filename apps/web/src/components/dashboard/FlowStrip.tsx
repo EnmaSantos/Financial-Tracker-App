@@ -1,4 +1,6 @@
-import { fmt$ } from "@/lib/money";
+"use client";
+
+import { CountUp } from "@/components/ui/CountUp";
 
 type Props = {
   monthlyIn: number;
@@ -19,14 +21,14 @@ export function FlowStrip({ monthlyIn, monthlyOut, monthlySaved }: Props) {
 
   return (
     <div
-      className="grid grid-cols-3 gap-6 mt-8 py-5 border-y border-rule"
+      className="grid grid-cols-3 gap-8 mt-10 py-6 border-y border-rule"
       aria-label="Monthly flow"
     >
       {items.map((item) => (
-        <div key={item.label} className="flex flex-col gap-1">
+        <div key={item.label} className="flex flex-col gap-1.5">
           <div className="label-mono">{item.label}</div>
           <div className={`num text-[20px] ${item.tone}`}>
-            {fmt$(Math.abs(item.value))}
+            <CountUp value={Math.abs(item.value)} duration={1.2} />
           </div>
         </div>
       ))}

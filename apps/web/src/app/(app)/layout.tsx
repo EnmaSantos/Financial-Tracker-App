@@ -18,7 +18,7 @@ export default async function AppLayout({
       <Sidebar userName={user.name} />
       <main
         className="flex-1"
-        style={{ padding: "40px 48px 80px", maxWidth: 1280 }}
+        style={{ padding: "56px 64px 96px", maxWidth: 1280 }}
       >
         {children}
       </main>

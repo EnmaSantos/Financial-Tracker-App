@@ -30,8 +30,8 @@ export function Sidebar({ userName }: { userName: string }) {
   return (
     <nav
       aria-label="Primary"
-      className="flex flex-col gap-6 sticky top-0 h-screen px-5 py-8 border-r border-rule bg-paper-2"
-      style={{ width: 220, minWidth: 220 }}
+      className="flex flex-col gap-8 sticky top-0 h-screen px-6 py-10 border-r border-rule bg-paper-2"
+      style={{ width: 240, minWidth: 240 }}
     >
       <div>
         <div
@@ -53,7 +53,7 @@ export function Sidebar({ userName }: { userName: string }) {
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={[
-                "flex items-center gap-2.5 px-2.5 py-2 rounded-md no-underline transition-colors",
+                "flex items-center gap-3 px-3 py-2.5 rounded-md no-underline transition-colors",
                 "font-sans text-[13px]",
                 active
                   ? "text-ink bg-paper-3"

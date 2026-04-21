@@ -1,7 +1,13 @@
+"use client";
+
 /**
- * Server-safe SVG line chart. Renders `data` and optionally a `compareData`
- * dashed baseline for scenario comparisons. No interactivity — pure markup.
+ * Client-side SVG line chart with motion draw-in animation.
+ * Renders `data` and optionally a `compareData` dashed baseline
+ * for scenario comparisons.
  */
+
+import { useEffect, useRef } from "react";
+import { animate } from "motion";
 
 type Point = { year: number; value: number };
 
@@ -20,7 +26,7 @@ export function LineChart({
   showBand = false,
   className,
 }: Props) {
-  if (data.length === 0) return null;
+  const svgRef = useRef<SVGSVGElement>(null);
 
   const width = 640; // viewBox — scales via CSS
   const padX = 24;
@@ -59,8 +65,70 @@ export function LineChart({
     return `${toPath(pts)} L${xn.toFixed(1)},${base} L${x0.toFixed(1)},${base} Z`;
   }
 
+  useEffect(() => {
+    if (data.length === 0) return;
+    const svg = svgRef.current;
+    if (!svg) return;
+
+    // Animate the main data line with stroke-dashoffset draw-in
+    const stops: (() => void)[] = [];
+
+    const mainPath = svg.querySelector<SVGPathElement>("path[data-main-line]");
+    if (mainPath) {
+      const length = mainPath.getTotalLength();
+      mainPath.style.strokeDasharray = `${length}`;
+      mainPath.style.strokeDashoffset = `${length}`;
+      const controls = animate(length, 0, {
+        duration: 1.8,
+        ease: [0.16, 1, 0.3, 1],
+        onUpdate: (v) => {
+          mainPath.style.strokeDashoffset = `${v}`;
+        },
+      });
+      stops.push(() => controls.stop());
+    }
+
+    // Fade in compare line
+    const comparePath = svg.querySelector<SVGPathElement>("path[data-compare-line]");
+    if (comparePath) {
+      comparePath.style.opacity = "0";
+      const c = animate(0 as number, 1 as number, {
+        duration: 1.0, delay: 0.3, ease: "easeOut",
+        onUpdate: (v) => { comparePath.style.opacity = `${v}`; },
+      });
+      stops.push(() => c.stop());
+    }
+
+    // Fade in the area band
+    const band = svg.querySelector<SVGPathElement>("path[data-band]");
+    if (band) {
+      band.style.opacity = "0";
+      const c = animate(0 as number, 0.5 as number, {
+        duration: 1.2, delay: 0.6, ease: "easeOut",
+        onUpdate: (v) => { band.style.opacity = `${v}`; },
+      });
+      stops.push(() => c.stop());
+    }
+
+    // Fade in endpoint dot
+    const dot = svg.querySelector<SVGCircleElement>("circle[data-dot]");
+    if (dot) {
+      dot.style.opacity = "0";
+      const c = animate(0 as number, 1 as number, {
+        duration: 0.4, delay: 1.6, ease: "easeOut",
+        onUpdate: (v) => { dot.style.opacity = `${v}`; },
+      });
+      stops.push(() => c.stop());
+    }
+
+    return () => stops.forEach((s) => s());
+  }, [data, compareData]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (data.length === 0) return null;
+
   return (
     <svg
+      ref={svgRef}
       viewBox={`0 0 ${width} ${height}`}
       preserveAspectRatio="none"
       className={className}
@@ -68,10 +136,16 @@ export function LineChart({
       role="img"
     >
       {showBand && (
-        <path d={toArea(data)} fill="var(--color-accent-soft)" opacity={0.5} />
+        <path
+          data-band
+          d={toArea(data)}
+          fill="var(--color-accent-soft)"
+          opacity={0.5}
+        />
       )}
       {compareData && (
         <path
+          data-compare-line
           d={toPath(compareData)}
           fill="none"
           stroke="var(--color-chart-ghost)"
@@ -80,6 +154,7 @@ export function LineChart({
         />
       )}
       <path
+        data-main-line
         d={toPath(data)}
         fill="none"
         stroke="var(--color-chart-1)"
@@ -91,6 +166,7 @@ export function LineChart({
         const [x, y] = project(last);
         return (
           <circle
+            data-dot
             cx={x}
             cy={y}
             r={3.5}

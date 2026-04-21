@@ -27,7 +27,7 @@ export function Allocation({ cash, invest, debt }: Props) {
   const total = segments.reduce((sum, s) => sum + s.value, 0) || 1;
 
   return (
-    <div className="mt-8 max-w-[360px]">
+    <div className="mt-10 max-w-[360px]">
       <div className="label-kicker mb-2.5">Allocation</div>
       <div
         className="flex h-2 rounded-sm overflow-hidden"
