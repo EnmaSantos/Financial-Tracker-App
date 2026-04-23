@@ -41,7 +41,7 @@ export function AddAccountButton() {
                 className="display mt-1"
                 style={{ fontSize: 24 }}
               >
-                Add to your ledger
+                Add an account
               </h2>
             </header>
             <AddAccountForm onDone={() => setOpen(false)} />

@@ -35,6 +35,16 @@ export const Icon = {
       <path d="M2 11 L5 7 L8 9 L12 3" stroke="currentColor" strokeWidth="1.2" fill="none" />
     </svg>
   ),
+  tx: (p: IconProps) => (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" {...p}>
+      <line x1="2" y1="3.5" x2="12" y2="3.5" stroke="currentColor" strokeWidth="1.2" />
+      <line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" strokeWidth="1.2" />
+      <line x1="2" y1="10.5" x2="12" y2="10.5" stroke="currentColor" strokeWidth="1.2" />
+      <circle cx="4" cy="3.5" r="0.9" fill="currentColor" />
+      <circle cx="9.5" cy="7" r="0.9" fill="currentColor" />
+      <circle cx="6" cy="10.5" r="0.9" fill="currentColor" />
+    </svg>
+  ),
   timeline: (p: IconProps) => (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" {...p}>
       <line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" strokeWidth="1.2" />

@@ -36,8 +36,9 @@ export async function updateAccountBalance(
     data: { balance: signed, updated: "just now" },
   });
 
-  revalidatePath("/");
-  revalidatePath("/accounts");
+  revalidatePath("/app");
+  revalidatePath("/app/accounts");
+  revalidatePath("/app/debt");
   return { ok: true };
 }
 
@@ -93,8 +94,9 @@ export async function createAccount(
     },
   });
 
-  revalidatePath("/");
-  revalidatePath("/accounts");
+  revalidatePath("/app");
+  revalidatePath("/app/accounts");
+  revalidatePath("/app/debt");
   return { ok: true };
 }
 
@@ -109,7 +111,8 @@ export async function deleteAccount(accountId: string): Promise<ActionResult> {
 
   await prisma.account.delete({ where: { id: accountId } });
 
-  revalidatePath("/");
-  revalidatePath("/accounts");
+  revalidatePath("/app");
+  revalidatePath("/app/accounts");
+  revalidatePath("/app/debt");
   return { ok: true };
 }

@@ -1,8 +1,15 @@
+import Link from "next/link";
 import { AuthForm } from "@/components/auth/AuthForm";
 
 export const metadata = { title: "Sign in · Equitas" };
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error } = await searchParams;
+
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
@@ -11,12 +18,16 @@ export default function LoginPage() {
           Welcome back.
         </h1>
       </header>
+      {error ? (
+        <p className="font-mono text-[11px] text-negative">{error}</p>
+      ) : null}
       <AuthForm mode="login" />
-      <p className="font-sans text-[11px] text-ink-3 text-center">
-        Demo accounts: <span className="font-mono">maya@example.com</span>,{" "}
-        <span className="font-mono">david@example.com</span>,{" "}
-        <span className="font-mono">linda@example.com</span> · password{" "}
-        <span className="font-mono">password123</span>
+      <p className="text-center font-sans text-[11px] text-ink-3">
+        Want to preview the product first?{" "}
+        <Link href="/#demos" className="text-ink underline">
+          Explore the public demos
+        </Link>
+        .
       </p>
     </div>
   );

@@ -8,8 +8,8 @@ export default async function ScenariosPage() {
   if (!d) {
     return (
       <div>
-        <h1 className="display text-4xl mb-4">Scenarios</h1>
-        <p className="text-ink-2">Add some accounts first to project your future net worth.</p>
+        <h1 className="mb-4 display text-4xl">What ifs</h1>
+        <p className="text-ink-2">Add a few accounts first and you can start exploring changes.</p>
       </div>
     );
   }
@@ -20,15 +20,15 @@ export default async function ScenariosPage() {
     <>
       <header className="masthead-row">
         <div>
-          <div className="label-kicker">Scenarios</div>
+          <div className="label-kicker">What ifs</div>
           <h1
             className="display mt-1"
             style={{ fontSize: "clamp(40px, 5vw, 56px)" }}
           >
-            Let&rsquo;s play with time.
+            Try a few changes.
           </h1>
-          <p className="font-serif-text italic text-[14px] text-ink-2 mt-2">
-            Slide the dials — the dashed ghost line is your current path.
+          <p className="mt-2 font-serif-text text-[14px] italic text-ink-2">
+            Move the sliders and compare your current path with a new one.
           </p>
         </div>
       </header>

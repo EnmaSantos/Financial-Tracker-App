@@ -47,15 +47,21 @@ export function LineChart({
   style?: "line" | "area";
   yDomain?: [number, number] | null;
 }) {
+  if (data.length === 0) return null;
+
   const allValues = [...data.map((d) => d.value), ...(compareData?.map((d) => d.value) ?? [])];
   const yMin = yDomain ? yDomain[0] : 0;
-  const yMax = yDomain ? yDomain[1] : Math.max(...allValues) * 1.08;
+  const rawYMax = yDomain ? yDomain[1] : Math.max(...allValues, yMin) * 1.08;
   const xMin = data[0]!.year;
   const xMax = data[data.length - 1]!.year;
+  const xSpan = Math.max(1, xMax - xMin);
+  const yMax = rawYMax > yMin ? rawYMax : yMin + 1;
+  const ySpan = yMax - yMin;
 
-  const xScale = (x: number) => pad + ((x - xMin) / (xMax - xMin)) * (width - pad * 2);
+  const xScale = (x: number) =>
+    xMax === xMin ? width / 2 : pad + ((x - xMin) / xSpan) * (width - pad * 2);
   const yScale = (y: number) =>
-    height - pad - ((y - yMin) / (yMax - yMin)) * (height - pad * 2);
+    height - pad - ((y - yMin) / ySpan) * (height - pad * 2);
 
   const pts = data.map((d) => ({ x: xScale(d.year), y: yScale(d.value) }));
   const cpts = compareData ? compareData.map((d) => ({ x: xScale(d.year), y: yScale(d.value) })) : null;
@@ -81,10 +87,12 @@ export function LineChart({
       .join(" ") +
     " Z";
 
-  const linePath = smoothPath(pts);
+  const linePath = pts.length > 1 ? smoothPath(pts) : `M ${pts[0]!.x} ${pts[0]!.y}`;
   const comparePath = cpts ? smoothPath(cpts) : null;
   const areaPath =
-    linePath + ` L ${pts[pts.length - 1]!.x} ${height - pad} L ${pts[0]!.x} ${height - pad} Z`;
+    pts.length > 1
+      ? linePath + ` L ${pts[pts.length - 1]!.x} ${height - pad} L ${pts[0]!.x} ${height - pad} Z`
+      : null;
 
   const handleX = handleYear != null ? xScale(handleYear) : null;
 
@@ -113,9 +121,13 @@ export function LineChart({
 
   const yTicks = 4;
   const ticks = Array.from({ length: yTicks + 1 }, (_, i) => yMin + ((yMax - yMin) * i) / yTicks);
-  const xTickStep = Math.ceil((xMax - xMin) / 6);
-  const xTicks: number[] = [];
-  for (let y = xMin; y <= xMax; y += xTickStep) xTicks.push(y);
+  const xTickStep = Math.max(1, Math.ceil(xSpan / 6));
+  const xTicks = Array.from(new Set([...data.map((d) => d.year)]));
+  if (xTicks.length === 1 || xSpan > 1) {
+    for (let year = xMin; year <= xMax; year += xTickStep) xTicks.push(year);
+    if (xTicks[xTicks.length - 1] !== xMax) xTicks.push(xMax);
+  }
+  const sortedXTicks = Array.from(new Set(xTicks)).sort((a, b) => a - b);
 
   const fmtK = (v: number) => {
     if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(v >= 10_000_000 ? 0 : 1)}M`;
@@ -154,7 +166,7 @@ export function LineChart({
           </text>
         </g>
       ))}
-      {xTicks.map((x, i) => (
+      {sortedXTicks.map((x, i) => (
         <text
           key={i}
           x={xScale(x)}
@@ -180,7 +192,7 @@ export function LineChart({
         />
       )}
 
-      {style === "area" ? (
+      {style === "area" && areaPath ? (
         <>
           <path d={areaPath} fill="var(--accent)" opacity="0.1" />
           <path d={linePath} fill="none" stroke="var(--accent)" strokeWidth="2" />
@@ -282,7 +294,7 @@ export function StackedBar({
   segments: { value: number; color: string }[];
   height?: number;
 }) {
-  const total = segments.reduce((a, b) => a + b.value, 0) || 1;
+  const total = segments.reduce((sum, segment) => sum + Math.max(0, segment.value), 0);
   let x = 0;
   return (
     <svg
@@ -291,8 +303,9 @@ export function StackedBar({
       style={{ width: "100%", height, display: "block" }}
     >
       {segments.map((s, i) => {
-        const w = (s.value / total) * 100;
-        const r = <rect key={i} x={x} y={0} width={w - 0.5} height={height} fill={s.color} rx="1" />;
+        const w = total > 0 ? (Math.max(0, s.value) / total) * 100 : 0;
+        const rectWidth = Math.max(0, w - (w > 0 ? 0.5 : 0));
+        const r = <rect key={i} x={x} y={0} width={rectWidth} height={height} fill={s.color} rx="1" />;
         x += w;
         return r;
       })}

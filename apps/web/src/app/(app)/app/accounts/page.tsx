@@ -15,7 +15,7 @@ export default async function AccountsPage() {
       <div>
         <header className="masthead-row">
           <div>
-            <div className="label-kicker">Ledger</div>
+            <div className="label-kicker">Your money</div>
             <h1 className="display mt-1" style={{ fontSize: "clamp(40px, 5vw, 56px)" }}>
               Accounts
             </h1>
@@ -35,7 +35,7 @@ export default async function AccountsPage() {
     <>
       <header className="masthead-row">
         <div>
-          <div className="label-kicker">Ledger</div>
+          <div className="label-kicker">Your money</div>
           <h1
             className="display mt-1"
             style={{ fontSize: "clamp(40px, 5vw, 56px)" }}
@@ -60,13 +60,13 @@ export default async function AccountsPage() {
         />
         <Section
           kicker="Investment"
-          title="Growing quietly"
+          title="Long-term accounts"
           subtotal={d.invest}
           accounts={investment}
         />
         <Section
           kicker="Debt"
-          title="Owed"
+          title="What you owe"
           subtotal={d.debt}
           accounts={debt}
         />
@@ -88,7 +88,7 @@ function Section({
 }) {
   return (
     <section>
-      <div className="flex items-end justify-between gap-6 mb-5 pb-4 border-b border-rule">
+      <div className="mb-5 flex items-end justify-between gap-6 border-b border-rule pb-4">
         <div>
           <div className="label-kicker mb-2">{kicker}</div>
           <h2 className="display leading-none" style={{ fontSize: 28 }}>
@@ -109,8 +109,8 @@ function Section({
               key={a.id}
               className="flex items-center justify-between gap-4 py-3"
             >
-              <div className="flex flex-col min-w-0">
-                <span className="font-serif-text text-[16px] truncate">
+              <div className="flex min-w-0 flex-col">
+                <span className="truncate font-serif-text text-[16px]">
                   {a.name}
                 </span>
                 <span className="font-sans text-[11px] text-ink-3">
@@ -127,7 +127,7 @@ function Section({
                   <span>updated {a.updated}</span>
                 </span>
               </div>
-              <div className="flex items-center gap-4 shrink-0">
+              <div className="flex shrink-0 items-center gap-4">
                 <BalanceEditor
                   accountId={a.id}
                   balance={a.balance}

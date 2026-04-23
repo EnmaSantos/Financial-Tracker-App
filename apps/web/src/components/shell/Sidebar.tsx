@@ -12,15 +12,16 @@ type NavItem = {
 };
 
 const NAV: NavItem[] = [
-  { href: "/", label: "Dashboard", icon: "dash" },
-  { href: "/accounts", label: "Accounts", icon: "accounts" },
-  { href: "/debt", label: "Debt", icon: "debt" },
-  { href: "/goals", label: "Goals", icon: "goals" },
-  { href: "/scenarios", label: "Scenarios", icon: "scen" },
+  { href: "/app", label: "Dashboard", icon: "dash" },
+  { href: "/app/accounts", label: "Accounts", icon: "accounts" },
+  { href: "/app/transactions", label: "Transactions", icon: "tx" },
+  { href: "/app/debt", label: "Debt", icon: "debt" },
+  { href: "/app/goals", label: "Goals", icon: "goals" },
+  { href: "/app/scenarios", label: "What ifs", icon: "scen" },
 ];
 
 function isActive(pathname: string, href: string) {
-  if (href === "/") return pathname === "/";
+  if (href === "/app") return pathname === "/app";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -40,7 +41,7 @@ export function Sidebar({ userName }: { userName: string }) {
         >
           Equitas
         </div>
-        <div className="label-mono mt-1">a quiet record</div>
+        <div className="label-mono mt-1">your money, in one place</div>
       </div>
 
       <div className="flex flex-col gap-1">

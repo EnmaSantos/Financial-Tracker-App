@@ -5,6 +5,8 @@ import { useState } from "react";
 import { useActionState } from "react";
 import type { AuthFormState } from "@/app/actions/auth";
 import { login, signup } from "@/app/actions/auth";
+import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 type Mode = "login" | "signup";
 
@@ -13,7 +15,9 @@ const initialState: AuthFormState = null;
 export function AuthForm({ mode }: { mode: Mode }) {
   const action = mode === "login" ? login : signup;
   const [state, formAction, pending] = useActionState(action, initialState);
+  const googleEnabled = isSupabaseConfigured();
   const fieldErrors = state && !state.ok ? state.fieldErrors ?? {} : {};
+  const successMessage = state && state.ok && "message" in state ? state.message : null;
   const topError =
     state && !state.ok && !Object.keys(fieldErrors).length
       ? state.error
@@ -36,6 +40,17 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
   return (
     <form action={formAction} onSubmit={handleSubmit} className="flex flex-col gap-6">
+      {googleEnabled ? (
+        <>
+          <GoogleAuthButton />
+          <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.18em] text-ink-3">
+            <div className="h-px flex-1 bg-rule" />
+            <span>or with email</span>
+            <div className="h-px flex-1 bg-rule" />
+          </div>
+        </>
+      ) : null}
+
       {mode === "signup" && (
         <Field label="Name" error={fieldErrors.name}>
           <input
@@ -97,6 +112,9 @@ export function AuthForm({ mode }: { mode: Mode }) {
       {topError && (
         <p className="font-mono text-[11px] text-negative">{topError}</p>
       )}
+      {successMessage && (
+        <p className="font-mono text-[11px] text-positive">{successMessage}</p>
+      )}
 
       <button type="submit" disabled={pending} className="btn btn-primary mt-2">
         {pending
@@ -114,6 +132,10 @@ export function AuthForm({ mode }: { mode: Mode }) {
             No account yet?{" "}
             <Link href="/signup" className="underline text-ink">
               Create one
+            </Link>
+            <span className="mx-2">·</span>
+            <Link href="/forgot-password" className="underline text-ink">
+              Forgot password?
             </Link>
           </>
         ) : (

@@ -12,7 +12,7 @@ export default async function AuthLayout({
   children: React.ReactNode;
 }) {
   const user = await getCurrentUser();
-  if (user) redirect("/");
+  if (user) redirect("/app");
 
   return (
     <main className="min-h-screen grid place-items-center px-6 py-16">

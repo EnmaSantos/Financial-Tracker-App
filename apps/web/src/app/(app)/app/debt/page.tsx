@@ -9,7 +9,7 @@ export default async function DebtPage() {
   if (!d) {
     return (
       <div>
-        <h1 className="display text-4xl mb-4">Debt</h1>
+        <h1 className="mb-4 display text-4xl">Debt</h1>
         <p className="text-ink-2">No debt accounts yet. Add one from the Accounts page.</p>
       </div>
     );

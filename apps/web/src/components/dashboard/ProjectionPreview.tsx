@@ -9,19 +9,18 @@ type Props = {
   returnRate: number; // percent
   startYear: number;
   years?: number;
+  href?: string;
+  ctaLabel?: string;
 };
 
-/**
- * Read-only preview of the user's default 30-year trajectory. Lives on the
- * dashboard as the right column of the lead-grid; the interactive version is
- * on /scenarios.
- */
 export function ProjectionPreview({
   startingNetWorth,
   monthlyContribution,
   returnRate,
   startYear,
   years = 30,
+  href = "/app/scenarios",
+  ctaLabel = "Try changes →",
 }: Props) {
   const data = makeProjection(
     startingNetWorth,
@@ -39,16 +38,16 @@ export function ProjectionPreview({
     >
       <div className="flex items-start justify-between mb-4">
         <div>
-          <div className="label-kicker mb-1.5">The arc</div>
+          <div className="label-kicker mb-1.5">Looking ahead</div>
           <h2 className="font-serif-display text-[20px] leading-none">
-            Projection, {years} years
+            What the next {years} years could look like
           </h2>
         </div>
         <Link
-          href="/scenarios"
+          href={href}
           className="font-mono text-[10px] uppercase tracking-wider text-ink-3 hover:text-ink"
         >
-          What if →
+          {ctaLabel}
         </Link>
       </div>
       <LineChart data={data} showBand height={240} />

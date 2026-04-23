@@ -1,14 +1,15 @@
 // Ledger — Prisma schema
-// Dev uses SQLite. In prod swap provider to postgresql and point
-// DATABASE_URL at Neon/Supabase.
+// Runtime uses DATABASE_URL. Prisma CLI can use DIRECT_URL for migrations
+// and direct database access against Supabase Postgres.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {

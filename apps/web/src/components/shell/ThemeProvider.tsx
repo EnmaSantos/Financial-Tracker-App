@@ -36,15 +36,12 @@ function readStored(): StoredPrefs {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(DEFAULT_THEME);
-  const [accent, setAccentState] = useState<Accent>(DEFAULT_ACCENT);
-
-  // Hydrate from localStorage on mount.
-  useEffect(() => {
-    const stored = readStored();
-    if (stored.theme) setThemeState(stored.theme);
-    if (stored.accent) setAccentState(stored.accent);
-  }, []);
+  const [theme, setThemeState] = useState<Theme>(
+    () => readStored().theme ?? DEFAULT_THEME,
+  );
+  const [accent, setAccentState] = useState<Accent>(
+    () => readStored().accent ?? DEFAULT_ACCENT,
+  );
 
   // Apply to <html> + persist.
   useEffect(() => {

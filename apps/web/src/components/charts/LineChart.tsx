@@ -122,7 +122,7 @@ export function LineChart({
     }
 
     return () => stops.forEach((s) => s());
-  }, [data, compareData]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [data, compareData]);
 
   if (data.length === 0) return null;
 

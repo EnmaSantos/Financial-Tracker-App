@@ -2,7 +2,6 @@
 
 import { Pill } from "@/components/ui/Pill";
 import { CountUp } from "@/components/ui/CountUp";
-import { fmt$ } from "@/lib/money";
 
 type Props = {
   netWorth: number;

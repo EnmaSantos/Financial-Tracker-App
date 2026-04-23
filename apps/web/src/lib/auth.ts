@@ -4,6 +4,10 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { prisma } from "@ledger/db";
 import { readSession } from "./session";
+import { isDemoUserId } from "./demo";
+import { isSupabaseConfigured } from "./supabase/config";
+import { createClient as createSupabaseServerClient } from "./supabase/server";
+import { ensureMirrorUserFromSupabaseUser } from "./user-mirror";
 
 /**
  * Auth helpers built on top of the session cookie.
@@ -17,6 +21,17 @@ import { readSession } from "./session";
  */
 
 export const getCurrentUser = cache(async () => {
+  if (isSupabaseConfigured()) {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      return ensureMirrorUserFromSupabaseUser(user);
+    }
+  }
+
   const session = await readSession();
   if (!session) return null;
 
@@ -35,7 +50,8 @@ export const getCurrentUser = cache(async () => {
       expensesMonthly: true,
     },
   });
-  return user ?? null;
+  if (!user || isDemoUserId(user.id)) return null;
+  return user;
 });
 
 export async function requireUser() {

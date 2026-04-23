@@ -4,10 +4,10 @@ export default function GoalsPage() {
       <header className="mb-8">
         <div className="label-kicker mb-2">Goals</div>
         <h1 className="display" style={{ fontSize: 48 }}>
-          One target at a time.
+          Keep the next milestone in view.
         </h1>
       </header>
-      <p className="text-ink-2">Goal tracking arrives in Phase 4.</p>
+      <p className="text-ink-2">Goal tracking is coming soon.</p>
     </div>
   );
 }
