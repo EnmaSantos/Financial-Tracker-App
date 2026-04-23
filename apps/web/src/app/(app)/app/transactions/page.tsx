@@ -6,7 +6,7 @@ import { TransactionImportForm } from "@/components/transactions/TransactionImpo
 
 export default async function TransactionsPage() {
   const user = await requireUser();
-  const [accounts, transactions] = await Promise.all([
+  const [accounts, transactions, presets] = await Promise.all([
     prisma.account.findMany({
       where: { userId: user.id },
       select: { id: true, name: true, institution: true },
@@ -21,6 +21,22 @@ export default async function TransactionsPage() {
       },
       orderBy: [{ date: "desc" }, { createdAt: "desc" }],
       take: 80,
+    }),
+    prisma.transactionImportPreset.findMany({
+      where: { userId: user.id },
+      select: {
+        id: true,
+        name: true,
+        mappingDate: true,
+        mappingMerchant: true,
+        mappingAmount: true,
+        mappingCategory: true,
+        mappingAccount: true,
+        mappingTransactionId: true,
+        mappingBalance: true,
+        fallbackAccountId: true,
+      },
+      orderBy: [{ updatedAt: "desc" }, { name: "asc" }],
     }),
   ]);
 
@@ -57,7 +73,7 @@ export default async function TransactionsPage() {
             <div className="label-kicker mb-2">Import CSV</div>
             <h2 className="display text-[28px] leading-none">Upload transactions</h2>
           </div>
-          <TransactionImportForm accounts={accounts} />
+          <TransactionImportForm accounts={accounts} presets={presets} />
         </div>
       </section>
 

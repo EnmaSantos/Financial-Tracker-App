@@ -110,6 +110,8 @@ export const Transaction = z.object({
   merchant: z.string(),
   category: TxnCategory,
   amount: z.number(),
+  sourceTransactionId: z.string().nullable().optional(),
+  balanceAfter: z.number().nullable().optional(),
 });
 export type Transaction = z.infer<typeof Transaction>;
 

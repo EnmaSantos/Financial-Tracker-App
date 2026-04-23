@@ -13,12 +13,24 @@ const HEADER_ALIASES = {
   amount: ["amount", "total", "net", "value"],
   category: ["category", "type"],
   account: ["account", "accountname", "wallet", "source"],
+  transactionId: ["transactionid", "id", "reference", "receiptid"],
+  balance: ["balance", "runningbalance", "endingbalance", "availablebalance"],
 } as const;
-
-type MappingKey = keyof typeof HEADER_ALIASES;
 type HeaderOption = {
   raw: string;
   normalized: string;
+};
+type ImportPreset = {
+  id: string;
+  name: string;
+  mappingDate: string;
+  mappingMerchant: string;
+  mappingAmount: string;
+  mappingCategory: string | null;
+  mappingAccount: string | null;
+  mappingTransactionId: string | null;
+  mappingBalance: string | null;
+  fallbackAccountId: string | null;
 };
 
 function normalizeHeader(value: string) {
@@ -74,10 +86,16 @@ function guessHeader(
   return match?.normalized ?? "";
 }
 
+function hasHeaderOption(options: HeaderOption[], value: string) {
+  return options.some((option) => option.normalized === value);
+}
+
 export function TransactionImportForm({
   accounts,
+  presets,
 }: {
   accounts: Array<{ id: string; name: string; institution: string }>;
+  presets: ImportPreset[];
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction, pending] = useActionState(
@@ -85,6 +103,7 @@ export function TransactionImportForm({
     initialState,
   );
   const hasAccounts = accounts.length > 0;
+  const [selectedPresetId, setSelectedPresetId] = useState("");
   const [headerOptions, setHeaderOptions] = useState<HeaderOption[]>([]);
   const [headerError, setHeaderError] = useState<string | null>(null);
   const [mappingDate, setMappingDate] = useState("");
@@ -92,25 +111,71 @@ export function TransactionImportForm({
   const [mappingAmount, setMappingAmount] = useState("");
   const [mappingCategory, setMappingCategory] = useState("");
   const [mappingAccount, setMappingAccount] = useState("");
+  const [mappingTransactionId, setMappingTransactionId] = useState("");
+  const [mappingBalance, setMappingBalance] = useState("");
+  const [fallbackAccountId, setFallbackAccountId] = useState("");
+  const [savePreset, setSavePreset] = useState(false);
+  const [presetName, setPresetName] = useState("");
 
   useEffect(() => {
     if (state?.ok) {
       formRef.current?.reset();
       setHeaderOptions([]);
       setHeaderError(null);
+      setSelectedPresetId("");
       setMappingDate("");
       setMappingMerchant("");
       setMappingAmount("");
       setMappingCategory("");
       setMappingAccount("");
+      setMappingTransactionId("");
+      setMappingBalance("");
+      setFallbackAccountId("");
+      setSavePreset(false);
+      setPresetName("");
     }
   }, [state]);
 
   const fieldErrors = state && !state.ok ? state.fieldErrors ?? {} : {};
   const shouldShowHeaderMapping = headerOptions.length > 0;
+  const hasValidDateMapping = mappingDate && hasHeaderOption(headerOptions, mappingDate);
+  const hasValidMerchantMapping =
+    mappingMerchant && hasHeaderOption(headerOptions, mappingMerchant);
+  const hasValidAmountMapping = mappingAmount && hasHeaderOption(headerOptions, mappingAmount);
   const missingRequiredMappings =
     shouldShowHeaderMapping &&
-    (!mappingDate || !mappingMerchant || !mappingAmount);
+    (!hasValidDateMapping || !hasValidMerchantMapping || !hasValidAmountMapping);
+  const selectedPreset = presets.find((preset) => preset.id === selectedPresetId) ?? null;
+
+  function applyPreset(preset: ImportPreset | null) {
+    if (!preset) {
+      setMappingDate("");
+      setMappingMerchant("");
+      setMappingAmount("");
+      setMappingCategory("");
+      setMappingAccount("");
+      setMappingTransactionId("");
+      setMappingBalance("");
+      setFallbackAccountId("");
+      setPresetName("");
+      return;
+    }
+
+    setMappingDate(preset.mappingDate);
+    setMappingMerchant(preset.mappingMerchant);
+    setMappingAmount(preset.mappingAmount);
+    setMappingCategory(preset.mappingCategory ?? "");
+    setMappingAccount(preset.mappingAccount ?? "");
+    setMappingTransactionId(preset.mappingTransactionId ?? "");
+    setMappingBalance(preset.mappingBalance ?? "");
+    setFallbackAccountId(
+      preset.fallbackAccountId &&
+        accounts.some((account) => account.id === preset.fallbackAccountId)
+        ? preset.fallbackAccountId
+        : "",
+    );
+    setPresetName(preset.name);
+  }
 
   async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.currentTarget.files?.[0];
@@ -118,11 +183,14 @@ export function TransactionImportForm({
     if (!file) {
       setHeaderOptions([]);
       setHeaderError(null);
+      setSelectedPresetId("");
       setMappingDate("");
       setMappingMerchant("");
       setMappingAmount("");
       setMappingCategory("");
       setMappingAccount("");
+      setMappingTransactionId("");
+      setMappingBalance("");
       return;
     }
 
@@ -143,11 +211,17 @@ export function TransactionImportForm({
 
       setHeaderOptions(options);
       setHeaderError(null);
-      setMappingDate(guessHeader(options, HEADER_ALIASES.date));
-      setMappingMerchant(guessHeader(options, HEADER_ALIASES.merchant));
-      setMappingAmount(guessHeader(options, HEADER_ALIASES.amount));
-      setMappingCategory(guessHeader(options, HEADER_ALIASES.category));
-      setMappingAccount(guessHeader(options, HEADER_ALIASES.account));
+      if (selectedPreset) {
+        applyPreset(selectedPreset);
+      } else {
+        setMappingDate(guessHeader(options, HEADER_ALIASES.date));
+        setMappingMerchant(guessHeader(options, HEADER_ALIASES.merchant));
+        setMappingAmount(guessHeader(options, HEADER_ALIASES.amount));
+        setMappingCategory(guessHeader(options, HEADER_ALIASES.category));
+        setMappingAccount(guessHeader(options, HEADER_ALIASES.account));
+        setMappingTransactionId(guessHeader(options, HEADER_ALIASES.transactionId));
+        setMappingBalance(guessHeader(options, HEADER_ALIASES.balance));
+      }
     } catch {
       setHeaderOptions([]);
       setHeaderError("We couldn't read that file. Try another CSV export.");
@@ -193,6 +267,31 @@ export function TransactionImportForm({
         <p className="font-mono text-[11px] text-negative">{headerError}</p>
       ) : null}
 
+      {presets.length > 0 ? (
+        <Field
+          label="Saved preset"
+          hint="Apply a saved provider mapping before you import."
+        >
+          <select
+            value={selectedPresetId}
+            onChange={(event) => {
+              const nextId = event.target.value;
+              setSelectedPresetId(nextId);
+              applyPreset(presets.find((preset) => preset.id === nextId) ?? null);
+            }}
+            className={inputCls}
+            disabled={!hasAccounts}
+          >
+            <option value="">No preset</option>
+            {presets.map((preset) => (
+              <option key={preset.id} value={preset.id}>
+                {preset.name}
+              </option>
+            ))}
+          </select>
+        </Field>
+      ) : null}
+
       {shouldShowHeaderMapping ? (
         <div className="flex flex-col gap-4 rounded-xl border border-rule bg-paper-2 px-4 py-4">
           <div className="flex flex-col gap-1">
@@ -209,7 +308,8 @@ export function TransactionImportForm({
 
           {missingRequiredMappings ? (
             <p className="font-mono text-[11px] text-negative">
-              Match the date, merchant, and amount columns before importing.
+              Match the date, merchant, and amount columns to headers that exist in this CSV
+              before importing.
             </p>
           ) : null}
 
@@ -252,6 +352,20 @@ export function TransactionImportForm({
               options={headerOptions}
               onChange={setMappingAccount}
             />
+            <HeaderMappingField
+              label="Transaction ID"
+              name="mappingTransactionId"
+              value={mappingTransactionId}
+              options={headerOptions}
+              onChange={setMappingTransactionId}
+            />
+            <HeaderMappingField
+              label="Balance"
+              name="mappingBalance"
+              value={mappingBalance}
+              options={headerOptions}
+              onChange={setMappingBalance}
+            />
           </div>
         </div>
       ) : null}
@@ -263,7 +377,8 @@ export function TransactionImportForm({
       >
         <select
           name="accountId"
-          defaultValue=""
+          value={fallbackAccountId}
+          onChange={(event) => setFallbackAccountId(event.target.value)}
           className={inputCls}
           disabled={!hasAccounts}
         >
@@ -275,6 +390,40 @@ export function TransactionImportForm({
           ))}
         </select>
       </Field>
+
+      <div className="flex flex-col gap-3 rounded-xl border border-rule bg-paper-2 px-4 py-4">
+        <label className="flex items-center gap-3 font-sans text-[13px] text-ink">
+          <input
+            type="checkbox"
+            name="savePreset"
+            checked={savePreset}
+            onChange={(event) => {
+              const checked = event.target.checked;
+              setSavePreset(checked);
+              if (!checked && !selectedPreset) {
+                setPresetName("");
+              }
+            }}
+            disabled={!hasAccounts}
+          />
+          Save or update this mapping as a preset
+        </label>
+
+        <Field
+          label="Preset name"
+          error={fieldErrors.presetName}
+          hint="Examples: PayPal export, Chase checking, Stripe payouts."
+        >
+          <input
+            name="presetName"
+            value={presetName}
+            onChange={(event) => setPresetName(event.target.value)}
+            placeholder="e.g. PayPal export"
+            className={inputCls}
+            disabled={!hasAccounts || !savePreset}
+          />
+        </Field>
+      </div>
 
       {state && !state.ok ? (
         <>

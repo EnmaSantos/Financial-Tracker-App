@@ -34,7 +34,9 @@ export type TransactionImportResult =
   | {
       ok: false;
       error: string;
-      fieldErrors?: Partial<Record<"file" | "accountId", string>>;
+      fieldErrors?: Partial<
+        Record<"file" | "accountId" | "presetName", string>
+      >;
       rowErrors?: string[];
     };
 
@@ -45,6 +47,8 @@ const HEADER_ALIASES = {
   amount: ["amount", "total", "net", "value"],
   category: ["category", "type"],
   account: ["account", "accountname", "wallet", "source"],
+  transactionId: ["transactionid", "id", "reference", "receiptid"],
+  balance: ["balance", "runningbalance", "endingbalance", "availablebalance"],
 } as const;
 
 function normalizeCell(value: string) {
@@ -202,6 +206,20 @@ function sumAmountsByAccount(
   return totals;
 }
 
+function latestBalancesByAccount(
+  rows: Array<{ accountId: string; balanceAfter: number | null }>,
+) {
+  const balances = new Map<string, number>();
+
+  for (const row of rows) {
+    if (row.balanceAfter != null) {
+      balances.set(row.accountId, row.balanceAfter);
+    }
+  }
+
+  return balances;
+}
+
 export async function createTransaction(
   _prev: TransactionCreateResult,
   formData: FormData,
@@ -276,6 +294,33 @@ export async function createTransaction(
     };
   }
 
+  const similarTransaction = await prisma.transaction.findFirst({
+    where: {
+      userId: user.id,
+      accountId,
+      date: parsed.data.date,
+      amount: parsed.data.amount,
+      merchant: {
+        equals: parsed.data.merchant,
+        mode: "insensitive",
+      },
+    },
+    select: {
+      date: true,
+      merchant: true,
+      sourceTransactionId: true,
+    },
+  });
+
+  if (similarTransaction) {
+    return {
+      ok: false,
+      error: similarTransaction.sourceTransactionId
+        ? `We found a similar imported transaction on ${similarTransaction.date} for "${similarTransaction.merchant}" with source transaction ID ${similarTransaction.sourceTransactionId}.`
+        : `We found a similar transaction on ${similarTransaction.date} for "${similarTransaction.merchant}".`,
+    };
+  }
+
   await prisma.$transaction([
     prisma.transaction.create({
       data: {
@@ -311,6 +356,8 @@ export async function importTransactions(
   const file = formData.get("file");
   const defaultAccountId =
     String(formData.get("accountId") ?? "").trim() || null;
+  const savePreset = String(formData.get("savePreset") ?? "") === "on";
+  const presetName = String(formData.get("presetName") ?? "").trim();
 
   const accounts = await prisma.account.findMany({
     where: { userId: user.id },
@@ -343,6 +390,14 @@ export async function importTransactions(
       ok: false,
       error: "That account is not available for this import.",
       fieldErrors: { accountId: "Choose one of your own accounts." },
+    };
+  }
+
+  if (savePreset && !presetName) {
+    return {
+      ok: false,
+      error: "Name the preset before saving it.",
+      fieldErrors: { presetName: "Preset name is required when saving." },
     };
   }
 
@@ -389,6 +444,16 @@ export async function importTransactions(
     formData.get("mappingAccount"),
     HEADER_ALIASES.account,
   );
+  const transactionIdIndex = resolveHeaderIndex(
+    headers,
+    formData.get("mappingTransactionId"),
+    HEADER_ALIASES.transactionId,
+  );
+  const balanceIndex = resolveHeaderIndex(
+    headers,
+    formData.get("mappingBalance"),
+    HEADER_ALIASES.balance,
+  );
 
   if (dateIndex === -1 || merchantIndex === -1 || amountIndex === -1) {
     const availableHeaders = headerRow
@@ -404,6 +469,35 @@ export async function importTransactions(
 
   const accountLookup = buildAccountLookup(accounts);
   const rowErrors: string[] = [];
+  const incomingSourceTransactionIds =
+    transactionIdIndex >= 0
+      ? Array.from(
+          new Set(
+            rows
+              .slice(1)
+              .map((row) => normalizeCell(row?.[transactionIdIndex] ?? ""))
+              .filter((value) => value.length > 0),
+          ),
+        )
+      : [];
+  const existingSourceTransactionIds = new Set(
+    incomingSourceTransactionIds.length > 0
+      ? (
+          await prisma.transaction.findMany({
+            where: {
+              userId: user.id,
+              sourceTransactionId: {
+                in: incomingSourceTransactionIds,
+              },
+            },
+            select: { sourceTransactionId: true },
+          })
+        )
+          .map((transaction) => transaction.sourceTransactionId)
+          .filter((value): value is string => Boolean(value))
+      : [],
+  );
+  const seenSourceTransactionIds = new Set(existingSourceTransactionIds);
   const data: Array<{
     userId: string;
     accountId: string;
@@ -411,6 +505,8 @@ export async function importTransactions(
     merchant: string;
     category: TxnCategoryValue;
     amount: number;
+    sourceTransactionId: string | null;
+    balanceAfter: number | null;
   }> = [];
 
   for (let index = 1; index < rows.length; index += 1) {
@@ -423,11 +519,15 @@ export async function importTransactions(
     const rawAmount = row[amountIndex] ?? "";
     const rawCategory = categoryIndex >= 0 ? row[categoryIndex] ?? "" : "";
     const rawAccount = accountIndex >= 0 ? row[accountIndex] ?? "" : "";
+    const rawTransactionId =
+      transactionIdIndex >= 0 ? normalizeCell(row[transactionIdIndex] ?? "") : "";
+    const rawBalance = balanceIndex >= 0 ? row[balanceIndex] ?? "" : "";
 
     const date = normalizeDate(rawDate);
     const merchant = rawMerchant.trim();
     const amount = parseAmount(rawAmount);
     const category = normalizeCategory(rawCategory);
+    const balanceAfter = parseAmount(rawBalance);
 
     const resolvedAccountId = rawAccount
       ? accountLookup.get(rawAccount.trim().toLowerCase()) ?? defaultAccountId
@@ -457,6 +557,13 @@ export async function importTransactions(
       continue;
     }
 
+    if (rawTransactionId && seenSourceTransactionIds.has(rawTransactionId)) {
+      rowErrors.push(
+        `Row ${index + 1}: transaction ID "${rawTransactionId}" is already imported or duplicated in this file.`,
+      );
+      continue;
+    }
+
     const parsed = TransactionCreate.safeParse({
       accountId: resolvedAccountId,
       date,
@@ -477,7 +584,13 @@ export async function importTransactions(
       merchant: parsed.data.merchant,
       category: parsed.data.category,
       amount: parsed.data.amount,
+      sourceTransactionId: rawTransactionId || null,
+      balanceAfter,
     });
+
+    if (rawTransactionId) {
+      seenSourceTransactionIds.add(rawTransactionId);
+    }
   }
 
   if (data.length === 0) {
@@ -494,6 +607,47 @@ export async function importTransactions(
       amount: row.amount,
     })),
   );
+  const reconciledBalances = latestBalancesByAccount(
+    data.map((row) => ({
+      accountId: row.accountId,
+      balanceAfter: row.balanceAfter,
+    })),
+  );
+
+  const presetWrite = savePreset
+    ? prisma.transactionImportPreset.upsert({
+        where: {
+          userId_name: {
+            userId: user.id,
+            name: presetName,
+          },
+        },
+        create: {
+          userId: user.id,
+          name: presetName,
+          mappingDate: headers[dateIndex] ?? "",
+          mappingMerchant: headers[merchantIndex] ?? "",
+          mappingAmount: headers[amountIndex] ?? "",
+          mappingCategory: categoryIndex >= 0 ? (headers[categoryIndex] ?? null) : null,
+          mappingAccount: accountIndex >= 0 ? (headers[accountIndex] ?? null) : null,
+          mappingTransactionId:
+            transactionIdIndex >= 0 ? (headers[transactionIdIndex] ?? null) : null,
+          mappingBalance: balanceIndex >= 0 ? (headers[balanceIndex] ?? null) : null,
+          fallbackAccountId: defaultAccountId,
+        },
+        update: {
+          mappingDate: headers[dateIndex] ?? "",
+          mappingMerchant: headers[merchantIndex] ?? "",
+          mappingAmount: headers[amountIndex] ?? "",
+          mappingCategory: categoryIndex >= 0 ? (headers[categoryIndex] ?? null) : null,
+          mappingAccount: accountIndex >= 0 ? (headers[accountIndex] ?? null) : null,
+          mappingTransactionId:
+            transactionIdIndex >= 0 ? (headers[transactionIdIndex] ?? null) : null,
+          mappingBalance: balanceIndex >= 0 ? (headers[balanceIndex] ?? null) : null,
+          fallbackAccountId: defaultAccountId,
+        },
+      })
+    : null;
 
   await prisma.$transaction([
     prisma.transaction.createMany({ data }),
@@ -501,13 +655,16 @@ export async function importTransactions(
       prisma.account.update({
         where: { id: accountId },
         data: {
-          balance: {
-            increment: amount,
-          },
+          balance: reconciledBalances.has(accountId)
+            ? reconciledBalances.get(accountId)!
+            : {
+                increment: amount,
+              },
           updated: "just now",
         },
       }),
     ),
+    ...(presetWrite ? [presetWrite] : []),
   ]);
 
   revalidatePath("/app");
@@ -519,7 +676,7 @@ export async function importTransactions(
     skipped: rowErrors.length,
     message:
       rowErrors.length > 0
-        ? `Imported ${data.length} transactions and skipped ${rowErrors.length}.`
-        : `Imported ${data.length} transactions.`,
+        ? `Imported ${data.length} transactions and skipped ${rowErrors.length}.${savePreset ? ` Saved preset "${presetName}".` : ""}`
+        : `Imported ${data.length} transactions.${savePreset ? ` Saved preset "${presetName}".` : ""}`,
   };
 }
