@@ -25,6 +25,53 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## Deploying To Vercel
+
+This app is set up to deploy from a monorepo to Vercel.
+
+In Vercel, import the repository and configure the project like this:
+
+- Framework Preset: `Next.js`
+- Root Directory: `apps/web`
+- Build Command: `pnpm vercel-build`
+- Install Command: leave Vercel default
+- Node.js: `20.x`
+
+The custom Vercel build runs `pnpm --filter @ledger/db generate` before `next build` so Prisma Client is generated for the shared `@ledger/db` workspace package.
+
+### Required environment variables
+
+Add these in `Project Settings -> Environment Variables` for Production:
+
+```bash
+SESSION_SECRET=replace-with-a-new-long-random-secret
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
+DATABASE_URL=postgresql://...pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1
+DIRECT_URL=postgresql://...supabase.co:5432/postgres
+```
+
+Use a pooled runtime `DATABASE_URL` for Vercel and keep `DIRECT_URL` for Prisma CLI tasks.
+
+### Production auth URLs
+
+After Vercel gives you a production domain, update these providers:
+
+- Supabase `Authentication -> URL Configuration`
+- Google Cloud Console OAuth client
+
+Use:
+
+- Site URL: `https://your-domain.com`
+- Supabase Redirect URLs:
+  - `https://your-domain.com/auth/confirm`
+  - `https://your-domain.com/update-password`
+  - optionally `https://your-domain.com/auth/confirm?next=/app` if you want the exact URL allowlisted
+- Google Authorized JavaScript origins:
+  - `https://your-domain.com`
+- Google Authorized redirect URIs:
+  - `https://your-project-ref.supabase.co/auth/v1/callback`
+
 ## Password Recovery Scaffold
 
 The initial Supabase password recovery routes are:
