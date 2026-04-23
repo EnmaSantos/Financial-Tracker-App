@@ -6,7 +6,7 @@ import { TransactionImportForm } from "@/components/transactions/TransactionImpo
 
 export default async function TransactionsPage() {
   const user = await requireUser();
-  const [accounts, transactions, presets] = await Promise.all([
+  const [accounts, transactions] = await Promise.all([
     prisma.account.findMany({
       where: { userId: user.id },
       select: { id: true, name: true, institution: true },
@@ -14,15 +14,24 @@ export default async function TransactionsPage() {
     }),
     prisma.transaction.findMany({
       where: { userId: user.id },
-      include: {
+      select: {
+        id: true,
+        date: true,
+        merchant: true,
+        category: true,
+        amount: true,
         account: {
           select: { name: true, institution: true },
         },
       },
+      // Explicitly select only legacy-safe columns so this page still renders
+      // before the latest transaction schema changes are pushed to the database.
       orderBy: [{ date: "desc" }, { createdAt: "desc" }],
       take: 80,
     }),
-    prisma.transactionImportPreset.findMany({
+  ]);
+  const presets = await prisma.transactionImportPreset
+    .findMany({
       where: { userId: user.id },
       select: {
         id: true,
@@ -37,8 +46,8 @@ export default async function TransactionsPage() {
         fallbackAccountId: true,
       },
       orderBy: [{ updatedAt: "desc" }, { name: "asc" }],
-    }),
-  ]);
+    })
+    .catch(() => []);
 
   return (
     <div className="flex flex-col gap-10">
