@@ -18,6 +18,7 @@ export function TransactionImportForm({
     importTransactions,
     initialState,
   );
+  const hasAccounts = accounts.length > 0;
 
   useEffect(() => {
     if (state?.ok) {
@@ -38,9 +39,17 @@ export function TransactionImportForm({
         Upload a CSV with <span className="font-mono text-ink">date</span>,{" "}
         <span className="font-mono text-ink">merchant</span>, and{" "}
         <span className="font-mono text-ink">amount</span> columns.{" "}
-        <span className="font-mono text-ink">category</span> and{" "}
-        <span className="font-mono text-ink">account</span> are optional.
+        <span className="font-mono text-ink">category</span> is optional. Every imported
+        row must resolve to one of your accounts, either from an{" "}
+        <span className="font-mono text-ink">account</span> column or the fallback account
+        below.
       </div>
+
+      {!hasAccounts ? (
+        <p className="font-mono text-[11px] text-negative">
+          Add an account first before importing transactions.
+        </p>
+      ) : null}
 
       <Field label="CSV file" error={fieldErrors.file}>
         <input
@@ -48,17 +57,23 @@ export function TransactionImportForm({
           name="file"
           accept=".csv,text/csv"
           required
+          disabled={!hasAccounts}
           className="w-full font-sans text-[13px] text-ink file:mr-4 file:border-0 file:bg-paper-3 file:px-3 file:py-2 file:font-sans file:text-[12px] file:text-ink"
         />
       </Field>
 
       <Field
-        label="Default account (optional)"
+        label="Fallback account (optional)"
         error={fieldErrors.accountId}
-        hint="Used when the CSV does not include an account column."
+        hint="Used when the CSV does not include an account column or a row leaves it blank."
       >
-        <select name="accountId" defaultValue="" className={inputCls}>
-          <option value="">Leave transactions unassigned</option>
+        <select
+          name="accountId"
+          defaultValue=""
+          className={inputCls}
+          disabled={!hasAccounts}
+        >
+          <option value="">No fallback account</option>
           {accounts.map((account) => (
             <option key={account.id} value={account.id}>
               {account.institution} · {account.name}
@@ -84,7 +99,11 @@ export function TransactionImportForm({
         <p className="font-mono text-[11px] text-positive">{state.message}</p>
       ) : null}
 
-      <button type="submit" disabled={pending} className="btn btn-primary self-start">
+      <button
+        type="submit"
+        disabled={pending || !hasAccounts}
+        className="btn btn-primary self-start"
+      >
         {pending ? "Importing…" : "Import transactions"}
       </button>
     </form>

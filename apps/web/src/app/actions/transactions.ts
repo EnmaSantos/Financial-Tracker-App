@@ -9,6 +9,20 @@ import {
 } from "@ledger/shared";
 import { requireUser } from "@/lib/auth";
 
+export type TransactionCreateResult =
+  | null
+  | {
+      ok: true;
+      message: string;
+    }
+  | {
+      ok: false;
+      error: string;
+      fieldErrors?: Partial<
+        Record<"date" | "merchant" | "category" | "amount" | "accountId" | "direction", string>
+      >;
+    };
+
 export type TransactionImportResult =
   | null
   | {
@@ -142,6 +156,129 @@ function buildAccountLookup(
   return lookup;
 }
 
+function parseManualAmount(raw: FormDataEntryValue | null) {
+  const value = String(raw ?? "").trim();
+  if (!value) return null;
+
+  const amount = Number(value);
+  if (!Number.isFinite(amount) || amount <= 0) return null;
+
+  return amount;
+}
+
+function sumAmountsByAccount(
+  rows: Array<{ accountId: string; amount: number }>,
+) {
+  const totals = new Map<string, number>();
+
+  for (const row of rows) {
+    totals.set(row.accountId, (totals.get(row.accountId) ?? 0) + row.amount);
+  }
+
+  return totals;
+}
+
+export async function createTransaction(
+  _prev: TransactionCreateResult,
+  formData: FormData,
+): Promise<TransactionCreateResult> {
+  const user = await requireUser();
+  const date = normalizeDate(String(formData.get("date") ?? ""));
+  const merchant = String(formData.get("merchant") ?? "").trim();
+  const category = String(formData.get("category") ?? "").trim();
+  const direction = String(formData.get("direction") ?? "").trim();
+  const accountIdRaw = String(formData.get("accountId") ?? "").trim();
+  const amountAbs = parseManualAmount(formData.get("amount"));
+
+  const fieldErrors: NonNullable<
+    Extract<TransactionCreateResult, { ok: false }>["fieldErrors"]
+  > = {};
+
+  if (!date) fieldErrors.date = "Enter a valid date.";
+  if (!merchant) fieldErrors.merchant = "Merchant is required.";
+  if (!TxnCategory.options.includes(category as TxnCategoryValue)) {
+    fieldErrors.category = "Choose a valid category.";
+  }
+  if (direction !== "expense" && direction !== "income") {
+    fieldErrors.direction = "Choose whether this is money out or money in.";
+  }
+  if (amountAbs == null) {
+    fieldErrors.amount = "Enter an amount greater than zero.";
+  }
+
+  if (!accountIdRaw) {
+    fieldErrors.accountId = "Choose an account for this transaction.";
+  }
+
+  let accountId: string | null = null;
+  if (accountIdRaw) {
+    const account = await prisma.account.findFirst({
+      where: {
+        id: accountIdRaw,
+        userId: user.id,
+      },
+      select: { id: true },
+    });
+
+    if (!account) {
+      fieldErrors.accountId = "Choose one of your own accounts.";
+    } else {
+      accountId = account.id;
+    }
+  }
+
+  if (Object.keys(fieldErrors).length > 0) {
+    return {
+      ok: false,
+      error: "Fix the highlighted fields and try again.",
+      fieldErrors,
+    };
+  }
+
+  const amount = direction === "expense" ? -amountAbs! : amountAbs!;
+
+  const parsed = TransactionCreate.safeParse({
+    accountId,
+    date,
+    merchant,
+    category,
+    amount,
+  });
+
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Transaction data is invalid.",
+    };
+  }
+
+  await prisma.$transaction([
+    prisma.transaction.create({
+      data: {
+        userId: user.id,
+        ...parsed.data,
+      },
+    }),
+    prisma.account.update({
+      where: { id: accountId! },
+      data: {
+        balance: {
+          increment: amount,
+        },
+        updated: "just now",
+      },
+    }),
+  ]);
+
+  revalidatePath("/app");
+  revalidatePath("/app/transactions");
+
+  return {
+    ok: true,
+    message: "Transaction added.",
+  };
+}
+
 export async function importTransactions(
   _prev: TransactionImportResult,
   formData: FormData,
@@ -169,10 +306,15 @@ export async function importTransactions(
     };
   }
 
-  if (
-    defaultAccountId &&
-    !accounts.some((account) => account.id === defaultAccountId)
-  ) {
+  if (accounts.length === 0) {
+    return {
+      ok: false,
+      error: "Add an account before importing transactions.",
+      fieldErrors: { accountId: "You need at least one account first." },
+    };
+  }
+
+  if (defaultAccountId && !accounts.some((account) => account.id === defaultAccountId)) {
     return {
       ok: false,
       error: "That account is not available for this import.",
@@ -220,7 +362,7 @@ export async function importTransactions(
   const rowErrors: string[] = [];
   const data: Array<{
     userId: string;
-    accountId: string | null;
+    accountId: string;
     date: string;
     merchant: string;
     category: TxnCategoryValue;
@@ -262,15 +404,17 @@ export async function importTransactions(
       continue;
     }
 
-    if (rawAccount && !resolvedAccountId) {
+    if (!resolvedAccountId) {
       rowErrors.push(
-        `Row ${index + 1}: account "${rawAccount}" did not match one of your accounts.`,
+        rawAccount
+          ? `Row ${index + 1}: account "${rawAccount}" did not match one of your accounts.`
+          : `Row ${index + 1}: no account was provided. Add an account column or choose a fallback account.`,
       );
       continue;
     }
 
     const parsed = TransactionCreate.safeParse({
-      accountId: resolvedAccountId ?? null,
+      accountId: resolvedAccountId,
       date,
       merchant,
       category,
@@ -284,7 +428,11 @@ export async function importTransactions(
 
     data.push({
       userId: user.id,
-      ...parsed.data,
+      accountId: resolvedAccountId,
+      date: parsed.data.date,
+      merchant: parsed.data.merchant,
+      category: parsed.data.category,
+      amount: parsed.data.amount,
     });
   }
 
@@ -296,7 +444,27 @@ export async function importTransactions(
     };
   }
 
-  await prisma.transaction.createMany({ data });
+  const balanceTotals = sumAmountsByAccount(
+    data.map((row) => ({
+      accountId: row.accountId,
+      amount: row.amount,
+    })),
+  );
+
+  await prisma.$transaction([
+    prisma.transaction.createMany({ data }),
+    ...Array.from(balanceTotals.entries()).map(([accountId, amount]) =>
+      prisma.account.update({
+        where: { id: accountId },
+        data: {
+          balance: {
+            increment: amount,
+          },
+          updated: "just now",
+        },
+      }),
+    ),
+  ]);
 
   revalidatePath("/app");
   revalidatePath("/app/transactions");
