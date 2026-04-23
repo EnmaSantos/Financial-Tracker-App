@@ -39,6 +39,13 @@ export type TransactionImportResult =
     };
 
 const CATEGORY_SET = new Set<string>(TxnCategory.options);
+const HEADER_ALIASES = {
+  date: ["date", "transactiondate", "posteddate"],
+  merchant: ["merchant", "description", "payee", "name", "itemtitle", "title"],
+  amount: ["amount", "total", "net", "value"],
+  category: ["category", "type"],
+  account: ["account", "accountname", "wallet", "source"],
+} as const;
 
 function normalizeCell(value: string) {
   return value.trim();
@@ -46,6 +53,23 @@ function normalizeCell(value: string) {
 
 function normalizeHeader(value: string) {
   return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+function findHeaderIndex(headers: string[], aliases: readonly string[]) {
+  return headers.findIndex((value) => aliases.includes(value));
+}
+
+function resolveHeaderIndex(
+  headers: string[],
+  explicit: FormDataEntryValue | null,
+  aliases: readonly string[],
+) {
+  const selected = normalizeHeader(String(explicit ?? ""));
+  if (selected) {
+    return headers.findIndex((value) => value === selected);
+  }
+
+  return findHeaderIndex(headers, aliases);
 }
 
 function parseCsv(text: string) {
@@ -340,21 +364,41 @@ export async function importTransactions(
   }
 
   const headers = headerRow.map(normalizeHeader);
-  const dateIndex = headers.findIndex((value) => value === "date");
-  const merchantIndex = headers.findIndex(
-    (value) => value === "merchant" || value === "description" || value === "payee",
+  const dateIndex = resolveHeaderIndex(
+    headers,
+    formData.get("mappingDate"),
+    HEADER_ALIASES.date,
   );
-  const amountIndex = headers.findIndex((value) => value === "amount");
-  const categoryIndex = headers.findIndex((value) => value === "category");
-  const accountIndex = headers.findIndex(
-    (value) => value === "account" || value === "accountname",
+  const merchantIndex = resolveHeaderIndex(
+    headers,
+    formData.get("mappingMerchant"),
+    HEADER_ALIASES.merchant,
+  );
+  const amountIndex = resolveHeaderIndex(
+    headers,
+    formData.get("mappingAmount"),
+    HEADER_ALIASES.amount,
+  );
+  const categoryIndex = resolveHeaderIndex(
+    headers,
+    formData.get("mappingCategory"),
+    HEADER_ALIASES.category,
+  );
+  const accountIndex = resolveHeaderIndex(
+    headers,
+    formData.get("mappingAccount"),
+    HEADER_ALIASES.account,
   );
 
   if (dateIndex === -1 || merchantIndex === -1 || amountIndex === -1) {
+    const availableHeaders = headerRow
+      .filter((value) => value.length > 0)
+      .map((value) => `"${value}"`)
+      .join(", ");
     return {
       ok: false,
       error:
-        "Use a CSV with at least these headers: date, merchant, amount. Category and account are optional.",
+        `We couldn't match the required columns automatically. Match your CSV headers to date, merchant, and amount. Available headers: ${availableHeaders || "none found"}.`,
     };
   }
 
