@@ -1,52 +1,77 @@
 import { prisma } from "@ledger/db";
-
-type HistoryPoint = {
-  date: string;
-  value: number;
-};
+import { buildBalanceHistory, type BalanceHistoryPoint } from "@/lib/accounts";
 
 function buildNetWorthHistory({
-  currentNetWorth,
-  transactions,
+  accounts,
+  transactionsByAccount,
 }: {
-  currentNetWorth: number;
-  transactions: Array<{ date: string; amount: number }>;
-}): HistoryPoint[] {
-  const today = new Date().toISOString().slice(0, 10);
+  accounts: Array<{ id: string; balance: number }>;
+  transactionsByAccount: Map<
+    string,
+    Array<{ date: string; amount: number; balanceAfter: number | null }>
+  >;
+}) {
+  const accountHistories = accounts.map((account) => ({
+    accountId: account.id,
+    points: buildBalanceHistory({
+      currentBalance: account.balance,
+      transactions: transactionsByAccount.get(account.id) ?? [],
+    }),
+  }));
 
-  if (transactions.length === 0) {
-    return [{ date: today, value: Math.round(currentNetWorth) }];
+  const allDates = Array.from(
+    new Set(
+      accountHistories.flatMap((history) => history.points.map((point) => point.date)),
+    ),
+  ).sort((left, right) => left.localeCompare(right));
+
+  if (allDates.length === 0) {
+    return [
+      {
+        date: new Date().toISOString().slice(0, 10),
+        value: Math.round(accounts.reduce((sum, account) => sum + account.balance, 0)),
+      },
+    ];
   }
 
-  const totalsByDate = new Map<string, number>();
+  const byAccount = new Map<
+    string,
+    {
+      currentIndex: number;
+      points: BalanceHistoryPoint[];
+      currentValue: number;
+    }
+  >();
 
-  for (const transaction of transactions) {
-    totalsByDate.set(
-      transaction.date,
-      (totalsByDate.get(transaction.date) ?? 0) + transaction.amount,
-    );
-  }
-
-  const datesDesc = Array.from(totalsByDate.keys()).sort((a, b) => b.localeCompare(a));
-  const pointsDesc: HistoryPoint[] = [];
-  let runningNetWorth = currentNetWorth;
-
-  if (datesDesc[0] !== today) {
-    pointsDesc.push({
-      date: today,
-      value: Math.round(runningNetWorth),
+  for (const history of accountHistories) {
+    const firstPoint = history.points[0];
+    byAccount.set(history.accountId, {
+      currentIndex: 0,
+      points: history.points,
+      currentValue: firstPoint?.value ?? 0,
     });
   }
 
-  for (const date of datesDesc) {
-    pointsDesc.push({
+  return allDates.map((date) => {
+    let total = 0;
+
+    for (const state of byAccount.values()) {
+      while (
+        state.currentIndex + 1 < state.points.length &&
+        state.points[state.currentIndex + 1]!.date <= date
+      ) {
+        state.currentIndex += 1;
+        state.currentValue = state.points[state.currentIndex]!.value;
+      }
+
+      total += state.currentValue;
+    }
+
+    return {
       date,
-      value: Math.round(runningNetWorth),
-    });
-    runningNetWorth -= totalsByDate.get(date) ?? 0;
-  }
-
-  return pointsDesc.reverse();
+      value: Math.round(total),
+    };
+  });
 }
 
 /**
@@ -63,19 +88,38 @@ export async function getDashboard(userId: string) {
         milestones: { orderBy: { year: "asc" } },
       },
     }),
-    prisma.transaction.findMany({
-      where: {
-        userId,
-        accountId: {
-          not: null,
+    prisma.transaction
+      .findMany({
+        where: {
+          userId,
+          accountId: {
+            not: null,
+          },
         },
-      },
-      select: {
-        date: true,
-        amount: true,
-      },
-      orderBy: [{ date: "asc" }, { createdAt: "asc" }],
-    }),
+        select: {
+          accountId: true,
+          date: true,
+          amount: true,
+          balanceAfter: true,
+        },
+        orderBy: [{ date: "asc" }, { createdAt: "asc" }],
+      })
+      .catch(async () =>
+        prisma.transaction.findMany({
+          where: {
+            userId,
+            accountId: {
+              not: null,
+            },
+          },
+          select: {
+            accountId: true,
+            date: true,
+            amount: true,
+          },
+          orderBy: [{ date: "asc" }, { createdAt: "asc" }],
+        }),
+      ),
   ]);
   if (!user) return null;
 
@@ -92,9 +136,29 @@ export async function getDashboard(userId: string) {
     .reduce((sum, a) => sum + a.balance, 0);
 
   const netWorth = cash + invest + debt;
+  const transactionsByAccount = new Map<
+    string,
+    Array<{ date: string; amount: number; balanceAfter: number | null }>
+  >();
+
+  for (const transaction of transactions) {
+    if (!transaction.accountId) continue;
+    const list = transactionsByAccount.get(transaction.accountId) ?? [];
+    list.push({
+      date: transaction.date,
+      amount: transaction.amount,
+      balanceAfter:
+        "balanceAfter" in transaction ? transaction.balanceAfter ?? null : null,
+    });
+    transactionsByAccount.set(transaction.accountId, list);
+  }
+
   const netWorthHistory = buildNetWorthHistory({
-    currentNetWorth: netWorth,
-    transactions,
+    accounts: accounts.map((account) => ({
+      id: account.id,
+      balance: account.balance,
+    })),
+    transactionsByAccount,
   });
 
   const monthlyOut = Math.abs(user.expensesMonthly);
