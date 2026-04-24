@@ -4,7 +4,7 @@ import { NetWorthHero } from "@/components/dashboard/NetWorthHero";
 import { FlowStrip } from "@/components/dashboard/FlowStrip";
 import { Allocation } from "@/components/dashboard/Allocation";
 import { AccountLists } from "@/components/dashboard/AccountLists";
-import { ProjectionPreview } from "@/components/dashboard/ProjectionPreview";
+import { NetWorthHistoryPreview } from "@/components/dashboard/NetWorthHistoryPreview";
 import { RemindersPanel } from "@/components/dashboard/RemindersPanel";
 
 export function DashboardOverview({
@@ -21,7 +21,6 @@ export function DashboardOverview({
     day: "numeric",
     year: "numeric",
   });
-  const startYear = new Date().getFullYear();
 
   return (
     <>
@@ -49,11 +48,8 @@ export function DashboardOverview({
             debt={dashboard.debt}
           />
         </div>
-        <ProjectionPreview
-          startingNetWorth={dashboard.netWorth}
-          monthlyContribution={dashboard.monthlySaved}
-          returnRate={dashboard.user.returnRate}
-          startYear={startYear}
+        <NetWorthHistoryPreview
+          history={dashboard.netWorthHistory}
           href={projectionHref}
           ctaLabel={projectionLabel}
         />
