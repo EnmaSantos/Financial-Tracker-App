@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Account } from "@ledger/db";
 import { getDashboard } from "@/lib/dashboard";
 import { requireUser } from "@/lib/auth";
@@ -109,7 +110,10 @@ function Section({
               key={a.id}
               className="flex items-center justify-between gap-4 py-3"
             >
-              <div className="flex min-w-0 flex-col">
+              <Link
+                href={`/app/accounts/${a.id}`}
+                className="flex min-w-0 flex-1 flex-col rounded-md px-2 py-2 -mx-2 transition-colors hover:bg-paper-3/60"
+              >
                 <span className="truncate font-serif-text text-[16px]">
                   {a.name}
                 </span>
@@ -126,7 +130,7 @@ function Section({
                   <span className="mx-1.5">·</span>
                   <span>updated {a.updated}</span>
                 </span>
-              </div>
+              </Link>
               <div className="flex shrink-0 items-center gap-4">
                 <BalanceEditor
                   accountId={a.id}

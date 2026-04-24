@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Account } from "@ledger/db";
 import { fmt$ } from "@/lib/money";
 
@@ -19,13 +20,16 @@ function SectionHead({ kicker, title }: { kicker: string; title: string }) {
 
 function AssetRow({ a }: { a: Account }) {
   return (
-    <div className="flex justify-between items-baseline">
+    <Link
+      href={`/app/accounts/${a.id}`}
+      className="flex items-baseline justify-between gap-4 rounded-md px-2 py-2 -mx-2 transition-colors hover:bg-paper-3/60"
+    >
       <div className="flex flex-col">
         <span className="font-serif-text text-[16px]">{a.name}</span>
         <span className="text-[11px] text-ink-3 font-sans">{a.institution}</span>
       </div>
       <div className="num text-[16px]">{fmt$(a.balance)}</div>
-    </div>
+    </Link>
   );
 }
 
@@ -35,7 +39,10 @@ function DebtRow({ a }: { a: Account }) {
     ? `PROMO ENDS ${promoEnd.toLocaleDateString("en-US", { month: "short", day: "numeric" }).toUpperCase()}`
     : null;
   return (
-    <div className="flex justify-between items-baseline">
+    <Link
+      href={`/app/accounts/${a.id}`}
+      className="flex items-baseline justify-between gap-4 rounded-md px-2 py-2 -mx-2 transition-colors hover:bg-paper-3/60"
+    >
       <div className="flex flex-col">
         <div className="flex items-center gap-1.5">
           <span className="font-serif-text text-[16px]">{a.name}</span>
@@ -62,7 +69,7 @@ function DebtRow({ a }: { a: Account }) {
         </div>
       </div>
       <div className="num text-[16px]">{fmt$(a.balance)}</div>
-    </div>
+    </Link>
   );
 }
 
