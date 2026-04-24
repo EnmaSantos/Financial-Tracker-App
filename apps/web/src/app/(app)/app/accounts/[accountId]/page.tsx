@@ -47,7 +47,7 @@ export default async function AccountDetailPage({
       </header>
 
       <section className="grid gap-8 xl:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.7fr)]">
-        <AccountBalanceHistory history={history} />
+        <AccountBalanceHistory history={history} isDebt={isDebt} />
 
         <div className="rounded-[24px] border border-rule bg-paper-2 p-6 shadow-[var(--shadow-1)]">
           <div className="mb-5">

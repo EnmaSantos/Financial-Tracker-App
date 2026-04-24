@@ -6,10 +6,15 @@
  * for scenario comparisons.
  */
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { animate } from "motion";
 
-type Point = { year: number; value: number };
+type Point = {
+  year: number;
+  value: number;
+  label?: string;
+  valueLabel?: string;
+};
 
 type Props = {
   data: Point[];
@@ -17,6 +22,7 @@ type Props = {
   height?: number;
   showBand?: boolean;
   className?: string;
+  trendMode?: "standard" | "debt" | "neutral";
 };
 
 export function LineChart({
@@ -25,8 +31,11 @@ export function LineChart({
   height = 260,
   showBand = false,
   className,
+  trendMode = "neutral",
 }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const frameRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   const width = 640; // viewBox — scales via CSS
   const padX = 24;
@@ -40,6 +49,37 @@ export function LineChart({
 
   const spanX = Math.max(1, maxYear - minYear);
   const spanY = Math.max(1, maxValue - minValue);
+  const delta = (data[data.length - 1]?.value ?? 0) - (data[0]?.value ?? 0);
+  const improved =
+    trendMode === "debt"
+      ? delta <= 0
+      : trendMode === "standard"
+        ? delta >= 0
+        : null;
+  const lineColor =
+    improved == null
+      ? "var(--color-chart-1)"
+      : improved
+        ? "var(--color-positive)"
+        : "var(--color-negative)";
+  const softColor =
+    improved == null
+      ? "var(--color-accent-soft)"
+      : improved
+        ? "var(--color-positive-soft)"
+        : "var(--color-negative-soft)";
+
+  const projectedPoints = useMemo(
+    () =>
+      data.map((point) => {
+        const [x, y] = project(point);
+        return { point, x, y };
+      }),
+    [data],
+  );
+
+  const activePoint =
+    activeIndex != null ? projectedPoints[activeIndex] ?? null : null;
 
   function project(p: Point): [number, number] {
     const x = padX + ((p.year - minYear) / spanX) * (width - padX * 2);
@@ -127,55 +167,119 @@ export function LineChart({
   if (data.length === 0) return null;
 
   return (
-    <svg
-      ref={svgRef}
-      viewBox={`0 0 ${width} ${height}`}
-      preserveAspectRatio="none"
+    <div
+      ref={frameRef}
       className={className}
-      style={{ width: "100%", height }}
-      role="img"
+      style={{ position: "relative", width: "100%", height }}
+      onMouseLeave={() => setActiveIndex(null)}
     >
-      {showBand && (
-        <path
-          data-band
-          d={toArea(data)}
-          fill="var(--color-accent-soft)"
-          opacity={0.5}
-        />
-      )}
-      {compareData && (
-        <path
-          data-compare-line
-          d={toPath(compareData)}
-          fill="none"
-          stroke="var(--color-chart-ghost)"
-          strokeWidth={1.5}
-          strokeDasharray="4 4"
-        />
-      )}
-      <path
-        data-main-line
-        d={toPath(data)}
-        fill="none"
-        stroke="var(--color-chart-1)"
-        strokeWidth={2}
-      />
-      {/* endpoint dot */}
-      {(() => {
-        const last = data[data.length - 1]!;
-        const [x, y] = project(last);
-        return (
-          <circle
-            data-dot
-            cx={x}
-            cy={y}
-            r={3.5}
-            fill="var(--color-paper)"
-            stroke="var(--color-chart-1)"
-            strokeWidth={2}
+      <svg
+        ref={svgRef}
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="none"
+        style={{ width: "100%", height }}
+        role="img"
+        onMouseMove={(event) => {
+          const frame = frameRef.current;
+          if (!frame || projectedPoints.length === 0) return;
+          const rect = frame.getBoundingClientRect();
+          const ratio = width / Math.max(rect.width, 1);
+          const x = (event.clientX - rect.left) * ratio;
+
+          let nearestIndex = 0;
+          let nearestDistance = Number.POSITIVE_INFINITY;
+
+          projectedPoints.forEach((entry, index) => {
+            const distance = Math.abs(entry.x - x);
+            if (distance < nearestDistance) {
+              nearestDistance = distance;
+              nearestIndex = index;
+            }
+          });
+
+          setActiveIndex(nearestIndex);
+        }}
+      >
+        {showBand && (
+          <path
+            data-band
+            d={toArea(data)}
+            fill={softColor}
+            opacity={0.5}
           />
-        );
-      })()}
-    </svg>
+        )}
+        {compareData && (
+          <path
+            data-compare-line
+            d={toPath(compareData)}
+            fill="none"
+            stroke="var(--color-chart-ghost)"
+            strokeWidth={1.5}
+            strokeDasharray="4 4"
+          />
+        )}
+        <path
+          data-main-line
+          d={toPath(data)}
+          fill="none"
+          stroke={lineColor}
+          strokeWidth={2}
+        />
+        {activePoint ? (
+          <>
+            <line
+              x1={activePoint.x}
+              x2={activePoint.x}
+              y1={padY}
+              y2={height - padY}
+              stroke="var(--color-rule)"
+              strokeDasharray="4 4"
+            />
+            <circle
+              cx={activePoint.x}
+              cy={activePoint.y}
+              r={4}
+              fill="var(--color-paper)"
+              stroke={lineColor}
+              strokeWidth={2}
+            />
+          </>
+        ) : null}
+        {(() => {
+          const last = data[data.length - 1]!;
+          const [x, y] = project(last);
+          return (
+            <circle
+              data-dot
+              cx={x}
+              cy={y}
+              r={3.5}
+              fill="var(--color-paper)"
+              stroke={lineColor}
+              strokeWidth={2}
+            />
+          );
+        })()}
+      </svg>
+
+      {activePoint ? (
+        <div
+          className="pointer-events-none absolute z-10 rounded-lg border border-rule bg-paper px-3 py-2 shadow-[var(--shadow-1)]"
+          style={{
+            left: `${(activePoint.x / width) * 100}%`,
+            top: Math.max(((activePoint.y / height) * 100) - 18, 4) + "%",
+            transform: "translate(-50%, -100%)",
+            minWidth: 120,
+          }}
+        >
+          <div className="font-mono text-[10px] uppercase tracking-wider text-ink-3">
+            {activePoint.point.label ?? activePoint.point.year}
+          </div>
+          <div className="num mt-1 text-[14px] text-ink">
+            {activePoint.point.valueLabel ?? activePoint.point.value.toLocaleString()}
+          </div>
+        </div>
+      ) : null}
+    </div>
   );
 }

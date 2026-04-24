@@ -1,3 +1,6 @@
+"use client";
+
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { LineChart } from "@/components/charts/LineChart";
 import { fmt$ } from "@/lib/money";
@@ -7,6 +10,7 @@ type Props = {
   href?: string;
   ctaLabel?: string;
 };
+type Range = "30d" | "90d" | "all";
 
 function formatDateLabel(value: string) {
   return new Date(`${value}T00:00:00`).toLocaleDateString("en-US", {
@@ -20,34 +24,73 @@ export function NetWorthHistoryPreview({
   href = "/app/transactions",
   ctaLabel = "Manage activity →",
 }: Props) {
-  const data = history.map((point, index) => ({
+  const [range, setRange] = useState<Range>("90d");
+
+  const filteredHistory = useMemo(() => {
+    if (range === "all" || history.length <= 1) {
+      return history;
+    }
+
+    const lastDate = history[history.length - 1]?.date;
+    if (!lastDate) return history;
+
+    const cutoff = new Date(`${lastDate}T00:00:00`);
+    cutoff.setDate(cutoff.getDate() - (range === "30d" ? 29 : 89));
+
+    const filtered = history.filter(
+      (point) => new Date(`${point.date}T00:00:00`) >= cutoff,
+    );
+
+    return filtered.length > 0 ? filtered : history;
+  }, [history, range]);
+
+  const data = filteredHistory.map((point, index) => ({
     year: index,
     value: point.value,
+    label: formatDateLabel(point.date),
+    valueLabel: fmt$(point.value),
   }));
-  const first = history[0] ?? null;
-  const last = history[history.length - 1] ?? null;
+  const first = filteredHistory[0] ?? null;
+  const last = filteredHistory[filteredHistory.length - 1] ?? null;
 
   return (
     <section
       className="rounded-xl border border-rule bg-paper-2 p-6"
       aria-label="Net worth history"
     >
-      <div className="mb-4 flex items-start justify-between">
+      <div className="mb-4 flex items-start justify-between gap-4">
         <div>
           <div className="label-kicker mb-1.5">Balance through time</div>
           <h2 className="font-serif-display text-[20px] leading-none">
             How your net worth has moved
           </h2>
         </div>
-        <Link
-          href={href}
-          className="font-mono text-[10px] uppercase tracking-wider text-ink-3 hover:text-ink"
-        >
-          {ctaLabel}
-        </Link>
+        <div className="flex items-center gap-2">
+          {(["30d", "90d", "all"] as const).map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setRange(value)}
+              className={[
+                "rounded-md border px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider transition-colors",
+                range === value
+                  ? "border-ink bg-ink text-paper"
+                  : "border-rule text-ink-2 hover:border-ink hover:text-ink",
+              ].join(" ")}
+            >
+              {value}
+            </button>
+          ))}
+          <Link
+            href={href}
+            className="font-mono text-[10px] uppercase tracking-wider text-ink-3 hover:text-ink"
+          >
+            {ctaLabel}
+          </Link>
+        </div>
       </div>
 
-      <LineChart data={data} showBand height={240} />
+      <LineChart data={data} showBand height={240} trendMode="standard" />
 
       {first && last ? (
         <div className="mt-4 flex items-baseline justify-between border-t border-rule pt-3 font-sans text-[12px] text-ink-3">
